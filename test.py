@@ -28,6 +28,8 @@ import zipfile
 from craft import CRAFT
 
 from collections import OrderedDict
+
+
 def copyStateDict(state_dict):
     if list(state_dict.keys())[0].startswith("module"):
         start_idx = 1
@@ -39,8 +41,10 @@ def copyStateDict(state_dict):
         new_state_dict[name] = v
     return new_state_dict
 
+
 def str2bool(v):
     return v.lower() in ("yes", "y", "true", "t", "1")
+
 
 parser = argparse.ArgumentParser(description='CRAFT Text Detection')
 parser.add_argument('--trained_model', default='weights/craft_mlt_25k.pth', type=str, help='pretrained model')
@@ -56,7 +60,6 @@ parser.add_argument('--test_folder', default='/data/', type=str, help='folder pa
 
 args = parser.parse_args()
 
-
 """ For test images in a folder """
 image_list, _, _ = file_utils.get_files('/data/CRAFT-pytorch/test')
 
@@ -64,17 +67,20 @@ result_folder = '/data/CRAFT-pytorch/result/'
 if not os.path.isdir(result_folder):
     os.mkdir(result_folder)
 
+
 def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly):
     t0 = time.time()
 
     # resize
-    img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(image, args.canvas_size, interpolation=cv2.INTER_LINEAR, mag_ratio=args.mag_ratio)
+    img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(image, args.canvas_size,
+                                                                          interpolation=cv2.INTER_LINEAR,
+                                                                          mag_ratio=args.mag_ratio)
     ratio_h = ratio_w = 1 / target_ratio
 
     # preprocessing
     x = imgproc.normalizeMeanVariance(img_resized)
-    x = torch.from_numpy(x).permute(2, 0, 1)    # [h, w, c] to [c, h, w]
-    x = Variable(x.unsqueeze(0))                # [c, h, w] to [b, c, h, w]
+    x = torch.from_numpy(x).permute(2, 0, 1)  # [h, w, c] to [c, h, w]
+    x = Variable(x.unsqueeze(0))  # [c, h, w] to [b, c, h, w]
     if cuda:
         x = x.cuda()
 
@@ -82,8 +88,8 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly):
     y, _ = net(x)
 
     # make score and link map
-    score_text = y[0,:,:,0].cpu().data.numpy()
-    score_link = y[0,:,:,1].cpu().data.numpy()
+    score_text = y[0, :, :, 0].cpu().data.numpy()
+    score_link = y[0, :, :, 1].cpu().data.numpy()
 
     t0 = time.time() - t0
     t1 = time.time()
@@ -104,15 +110,14 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly):
     render_img = np.hstack((render_img, score_link))
     ret_score_text = imgproc.cvt2HeatmapImg(render_img)
 
-    if args.show_time : print("\ninfer/postproc time : {:.3f}/{:.3f}".format(t0, t1))
+    if args.show_time: print("\ninfer/postproc time : {:.3f}/{:.3f}".format(t0, t1))
 
     return boxes, polys, ret_score_text
 
 
-
 def test(modelpara):
     # load net
-    net = CRAFT()     # initialize
+    net = CRAFT()  # initialize
 
     print('Loading weights from checkpoint {}'.format(modelpara))
     if args.cuda:
@@ -131,15 +136,16 @@ def test(modelpara):
 
     # load data
     for k, image_path in enumerate(image_list):
-        print("Test image {:d}/{:d}: {:s}".format(k+1, len(image_list), image_path), end='\r')
+        print("Test image {:d}/{:d}: {:s}".format(k + 1, len(image_list), image_path), end='\r')
         image = imgproc.loadImage(image_path)
 
-        bboxes, polys, score_text = test_net(net, image, args.text_threshold, args.link_threshold, args.low_text, args.cuda, args.poly)
+        bboxes, polys, score_text = test_net(net, image, args.text_threshold, args.link_threshold, args.low_text,
+                                             args.cuda, args.poly)
         # save score text
         filename, file_ext = os.path.splitext(os.path.basename(image_path))
         mask_file = result_folder + "/res_" + filename + '_mask.jpg'
-        #cv2.imwrite(mask_file, score_text)
+        # cv2.imwrite(mask_file, score_text)
 
-        file_utils.saveResult(image_path, image[:,:,::-1], polys, dirname=result_folder)
+        file_utils.saveResult(image_path, image[:, :, ::-1], polys, dirname=result_folder)
 
     print("elapsed time : {}s".format(time.time() - t))

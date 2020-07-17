@@ -1,8 +1,4 @@
-
-
-
 ###for icdar2015####
-
 
 
 import torch
@@ -33,14 +29,16 @@ def ratio_area(h, w, box):
             ratio = tem
     return ratio, area
 
+
 def rescale_img(img, box, h, w):
-    image = np.zeros((768,768,3),dtype = np.uint8)
+    image = np.zeros((768, 768, 3), dtype=np.uint8)
     length = max(h, w)
-    scale = 768 / length           ###768 is the train image size
+    scale = 768 / length  ###768 is the train image size
     img = cv2.resize(img, dsize=None, fx=scale, fy=scale)
     image[:img.shape[0], :img.shape[1]] = img
     box *= scale
     return image
+
 
 def random_scale(img, bboxes, min_size):
     h, w = img.shape[0:2]
@@ -61,12 +59,13 @@ def random_scale(img, bboxes, min_size):
     img = cv2.resize(img, dsize=None, fx=scale, fy=scale)
     return img
 
-def padding_image(image,imgsize):
+
+def padding_image(image, imgsize):
     length = max(image.shape[0:2])
     if len(image.shape) == 3:
-        img = np.zeros((imgsize, imgsize, len(image.shape)), dtype = np.uint8)
+        img = np.zeros((imgsize, imgsize, len(image.shape)), dtype=np.uint8)
     else:
-        img = np.zeros((imgsize, imgsize), dtype = np.uint8)
+        img = np.zeros((imgsize, imgsize), dtype=np.uint8)
     scale = imgsize / length
     image = cv2.resize(image, dsize=None, fx=scale, fy=scale)
     if len(image.shape) == 3:
@@ -74,6 +73,7 @@ def padding_image(image,imgsize):
     else:
         img[:image.shape[0], :image.shape[1]] = image
     return img
+
 
 def random_crop(imgs, img_size, character_bboxes):
     h, w = imgs[0].shape[0:2]
@@ -262,12 +262,12 @@ class craft_base_dataset(data.Dataset):
         except Exception as e:
             print(e, gt_path)
 
-#         for j in range(len(bboxes)):
-#             ones = np.ones((4, 1))
-#             tmp = np.concatenate([bboxes[j], ones], axis=-1)
-#             I = np.matrix(MM).I
-#             ori = np.matmul(I, tmp.transpose(1, 0)).transpose(1, 0)
-#             bboxes[j] = ori[:, :2]
+        #         for j in range(len(bboxes)):
+        #             ones = np.ones((4, 1))
+        #             tmp = np.concatenate([bboxes[j], ones], axis=-1)
+        #             I = np.matrix(MM).I
+        #             ori = np.matmul(I, tmp.transpose(1, 0)).transpose(1, 0)
+        #             bboxes[j] = ori[:, :2]
 
         bboxes[:, :, 1] = np.clip(bboxes[:, :, 1], 0., image.shape[0] - 1)
         bboxes[:, :, 0] = np.clip(bboxes[:, :, 0], 0., image.shape[1] - 1)
@@ -511,7 +511,7 @@ class ICDAR2013(craft_base_dataset):
             try:
                 area, p0, p3, p2, p1, _, _ = mep(box)
             except Exception as e:
-                print(e,gt_path)
+                print(e, gt_path)
 
             bbox = np.array([p0, p1, p2, p3])
             distance = 10000000
@@ -659,5 +659,3 @@ if __name__ == '__main__':
         # total_sum += confidence_mean
         # print(index, confidence_mean)
     print("mean=", total_sum / total)
-
-

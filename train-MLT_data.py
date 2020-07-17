@@ -20,21 +20,17 @@ from data_loader import ICDAR2015, Synth80k, ICDAR2013
 
 from test import test
 
-
 from math import exp
 
 ###import file#######
 from augmentation import random_rot, crop_img_bboxes
 from gaussianmap import gaussion_transform, four_point_transform
-from generateheatmap import add_character, generate_target, add_affinity, generate_affinity, sort_box, real_affinity, generate_affinity_box
+from generateheatmap import add_character, generate_target, add_affinity, generate_affinity, sort_box, real_affinity, \
+    generate_affinity_box
 from mseloss import Maploss
-
-
 
 from collections import OrderedDict
 from eval13.script import getresult
-
-
 
 from PIL import Image
 from torchvision.transforms import transforms
@@ -42,7 +38,7 @@ from craft import CRAFT
 from torch.autograd import Variable
 from multiprocessing import Pool
 
-#3.2768e-5
+# 3.2768e-5
 random.seed(42)
 
 # class SynAnnotationTransform(object):
@@ -52,13 +48,12 @@ random.seed(42)
 #         image_name = gt['imnames'][0]
 parser = argparse.ArgumentParser(description='CRAFT reimplementation')
 
-
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from')
-parser.add_argument('--batch_size', default=128, type = int,
+parser.add_argument('--batch_size', default=128, type=int,
                     help='batch size of training')
-#parser.add_argument('--cdua', default=True, type=str2bool,
-                    #help='Use CUDA to train model')
+# parser.add_argument('--cuda', default=True, type=str2bool,
+# help='Use CUDA to train model')
 parser.add_argument('--lr', '--learning-rate', default=3.2768e-5, type=float,
                     help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float,
@@ -70,9 +65,7 @@ parser.add_argument('--gamma', default=0.1, type=float,
 parser.add_argument('--num_workers', default=32, type=int,
                     help='Number of workers used in dataloading')
 
-
 args = parser.parse_args()
-
 
 
 def copyStateDict(state_dict):
@@ -85,12 +78,6 @@ def copyStateDict(state_dict):
         name = ".".join(k.split(".")[start_idx:])
         new_state_dict[name] = v
     return new_state_dict
-
-
-
-
-
-
 
 
 def adjust_learning_rate(optimizer, gamma, step):
@@ -115,7 +102,7 @@ if __name__ == '__main__':
     # imgtxt = box['txt'][0]
     #
     # dataloader = syndata(imgname, charbox, imgtxt)
-    dataloader = Synth80k('/data/CRAFT-pytorch/SynthText', target_size = 768)
+    dataloader = Synth80k('/data/CRAFT-pytorch/SynthText', target_size=768)
     train_loader = torch.utils.data.DataLoader(
         dataloader,
         batch_size=2,
@@ -126,23 +113,23 @@ if __name__ == '__main__':
     batch_syn = iter(train_loader)
     # prefetcher = data_prefetcher(dataloader)
     # input, target1, target2 = prefetcher.next()
-    #print(input.size())
+    # print(input.size())
     net = CRAFT()
-    #net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/CRAFT_net_050000.pth')))
+    # net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/CRAFT_net_050000.pth')))
     net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/1-7.pth')))
-    #net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/craft_mlt_25k.pth')))
-    #net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/synweights/syn_0_20000.pth')))
-    #realdata = realdata(net)
+    # net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/craft_mlt_25k.pth')))
+    # net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/synweights/syn_0_20000.pth')))
+    # realdata = realdata(net)
 
     net = net.cuda()
-    #net = CRAFT_net
+    # net = CRAFT_net
 
     # if args.cdua:
-    net = torch.nn.DataParallel(net,device_ids=[0,1,2,3]).cuda()
+    net = torch.nn.DataParallel(net, device_ids=[0, 1, 2, 3]).cuda()
     net.train()
 
     cudnn.benchmark = False
-    realdata = ICDAR2013(net, '/data/CRAFT-pytorch/icdar1317', target_size = 768, viz = False)
+    realdata = ICDAR2013(net, '/data/CRAFT-pytorch/icdar1317', target_size=768, viz=False)
     real_data_loader = torch.utils.data.DataLoader(
         realdata,
         batch_size=10,
@@ -151,16 +138,13 @@ if __name__ == '__main__':
         drop_last=True,
         pin_memory=True)
 
-
-    #net.train()
+    # net.train()
     optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     criterion = Maploss()
-    #criterion = torch.nn.MSELoss(reduce=True, size_average=True)
-    #net.train()
-
+    # criterion = torch.nn.MSELoss(reduce=True, size_average=True)
+    # net.train()
 
     step_index = 0
-
 
     loss_time = 0
     loss_value = 0
@@ -174,16 +158,15 @@ if __name__ == '__main__':
 
         st = time.time()
         for index, (real_images, real_gh_label, real_gah_label, real_mask, _) in enumerate(real_data_loader):
-            #net.train()
-            #real_images, real_gh_label, real_gah_label, real_mask = next(batch_real)
+            # net.train()
+            # real_images, real_gh_label, real_gah_label, real_mask = next(batch_real)
             syn_images, syn_gh_label, syn_gah_label, syn_mask, __ = next(batch_syn)
-            #net.train()
-            images = torch.cat((syn_images,real_images), 0)
+            # net.train()
+            images = torch.cat((syn_images, real_images), 0)
             gh_label = torch.cat((syn_gh_label, real_gh_label), 0)
             gah_label = torch.cat((syn_gah_label, real_gah_label), 0)
             mask = torch.cat((syn_mask, real_mask), 0)
-            #affinity_mask = torch.cat((syn_mask, real_affinity_mask), 0)
-
+            # affinity_mask = torch.cat((syn_mask, real_affinity_mask), 0)
 
             images = Variable(images.type(torch.FloatTensor)).cuda()
             gh_label = gh_label.type(torch.FloatTensor)
@@ -208,7 +191,12 @@ if __name__ == '__main__':
             loss_value += loss.item()
             if index % 2 == 0 and index > 0:
                 et = time.time()
-                print('epoch {}:({}/{}) batch || training time for 2 batch {} || training loss {} ||'.format(epoch, index, len(real_data_loader), et-st, loss_value/2))
+                print(
+                    'epoch {}:({}/{}) batch || training time for 2 batch {} || training loss {} ||'.format(epoch, index,
+                                                                                                           len(
+                                                                                                               real_data_loader),
+                                                                                                           et - st,
+                                                                                                           loss_value / 2))
                 loss_time = 0
                 loss_value = 0
                 st = time.time()
@@ -218,13 +206,13 @@ if __name__ == '__main__':
             #     torch.save(net.module.state_dict(),
             #                '/data/CRAFT-pytorch/real_weights/lower_loss.pth')
 
-            #net.eval()
-            if index % 350 ==0 and index != 0:
+            # net.eval()
+            if index % 350 == 0 and index != 0:
                 print('Saving state, iter:', index)
                 torch.save(net.module.state_dict(),
-                           '/data/CRAFT-pytorch/weights/mlt'+'_'+repr(epoch)+'_' + repr(index) + '.pth')
-                test('/data/CRAFT-pytorch/weights/mlt'+'_'+repr(epoch)+'_' + repr(index) + '.pth')
-                #test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
+                           '/data/CRAFT-pytorch/weights/mlt' + '_' + repr(epoch) + '_' + repr(index) + '.pth')
+                test('/data/CRAFT-pytorch/weights/mlt' + '_' + repr(epoch) + '_' + repr(index) + '.pth')
+                # test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
                 getresult()
         print('Saving state, iter:', epoch)
         torch.save(net.module.state_dict(),
@@ -232,10 +220,3 @@ if __name__ == '__main__':
         test('/data/CRAFT-pytorch/epoch_weights/mlt' + '_' + repr(epoch) + '.pth')
         # test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
         getresult()
-            
-
-
-
-
-
-

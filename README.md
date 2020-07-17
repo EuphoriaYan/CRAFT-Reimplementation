@@ -58,11 +58,11 @@ Syndata+IC15:[Syndata+IC15 for baidu drive](https://pan.baidu.com/s/19lJRM6YWZXV
 - Run **`python trainic-MLT_data.py`**
 
 ### If you want to train for weak supervised use our Syndate pre-trained model:                                                                                                                                
-1、You should first download the pre_trained model trained in the Syndata [baidu](https://pan.baidu.com/s/1MaznjE79JNS9Ld48ZtRefg)||[google](https://drive.google.com/file/d/1FvqfBMZQJeZXGfZLl-840YXoeYK8CNwk/view?usp=sharing).                                                                                                                                                      
+1、You should first download the pre_trained model trained in the Syndata [baidu](https://pan.baidu.com/s/1MaznjE79JNS9Ld48ZtRefg)||[google](https://drive.google.com/file/d/1FvqfBMZQJeZXGfZLl-840YXoeYK8CNwk/view?usp=sharing).                                                                                                                                                     
 2、change the data path and pre-trained model path.                                                                                                                                                         
 3、run `python trainic15data.py`                                                                                                                                                                           
 
-                                                                                                                    
+
 **This code supprts for Syndata and icdar2015, and we will release the training code for IC13 and IC17 as soon as possible.**
 
 Methods                                       |dataset      |Recall      |precision      |H-mean
@@ -76,15 +76,12 @@ Syndata+IC15(new gaussian map method)         |ICDAR15      |80.36%      |84.25%
 ### We have released the latest code with new gaussian map and random crop algorithm. 
 **`Note:new gaussian map method can split the inference gaussian region score map`**                                                                                                                         
 `Sample:`                                                                                           
-<img src="https://github.com/backtime92/CRAFT-Reimplementation/blob/master/image/test3_score.jpg" width="384" height="512" /><img src="https://github.com/backtime92/CRAFT-Reimplementation/blob/master/image/test3_affinity.jpg" width="384" height="256" />                                                                                                                                                      
+<img src="./image/test3_score.jpg" width="384" height="512" /><img src="./image/test3_affinity.jpg" width="384" height="256" />                                                                                                                                                      
 
 **`Note:We have solved the problem about detecting big word. Now we are training the model. And any issues or advice are welcome.`**                                                                  
                                                                                                                                                  
 `Sample:`
-<img src="https://github.com/backtime92/CRAFT-Reimplementation/blob/master/image/test4_score.jpg" width="384" height="512" /><img src="https://github.com/backtime92/CRAFT-Reimplementation/blob/master/image/test4_affinity.jpg" width="384" height="256" />                                                                                                                                    
-
-###weChat QR code
-<img src="https://github.com/backtime92/CRAFT-Reimplementation/blob/master/image/wechatgroup.jpeg" width="150" height="150" />                                                           
+<img src="./image/test4_score.jpg" width="384" height="512" /><img src="https://github.com/backtime92/CRAFT-Reimplementation/blob/master/image/test4_affinity.jpg" width="384" height="256" />                                                                                                                                                                                         
 
 
 # Contributing to the project

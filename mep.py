@@ -116,7 +116,7 @@ def sort_rectangle(poly):
         p3_index = (p0_index + 3) % 4
         return poly[[p0_index, p1_index, p2_index, p3_index]], 0.
     else:
-        #- find the point that sits right to the lowest point
+        # - find the point that sits right to the lowest point
         p_lowest_right = (p_lowest - 1) % 4
         p_lowest_left = (p_lowest + 1) % 4
         angle = np.arctan(
@@ -125,14 +125,14 @@ def sort_rectangle(poly):
         # if angle <= 0:
         #     print(angle, poly[p_lowest], poly[p_lowest_right])
         if angle / np.pi * 180 > 45:
-            #p2 - this point is p2
+            # p2 - this point is p2
             p2_index = p_lowest
             p1_index = (p2_index - 1) % 4
             p0_index = (p2_index - 2) % 4
             p3_index = (p2_index + 1) % 4
             return poly[[p0_index, p1_index, p2_index, p3_index]], -(np.pi / 2 - angle)
         else:
-            #p3 - this point is p3
+            # p3 - this point is p3
             p3_index = p_lowest
             p0_index = (p3_index + 1) % 4
             p1_index = (p3_index + 2) % 4

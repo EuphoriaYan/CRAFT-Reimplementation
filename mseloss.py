@@ -4,13 +4,13 @@ import torch.nn as nn
 
 
 class Maploss(nn.Module):
-    def __init__(self, use_gpu = True):
+    def __init__(self, use_gpu=True):
 
-        super(Maploss,self).__init__()
+        super(Maploss, self).__init__()
 
     def single_image_loss(self, pre_loss, loss_label):
         batch_size = pre_loss.shape[0]
-        sum_loss = torch.mean(pre_loss.view(-1))*0
+        sum_loss = torch.mean(pre_loss.view(-1)) * 0
         pre_loss = pre_loss.view(batch_size, -1)
         loss_label = loss_label.view(batch_size, -1)
         internel = batch_size
@@ -22,22 +22,20 @@ class Maploss(nn.Module):
             if positive_pixel != 0:
                 posi_loss = torch.mean(pre_loss[i][(loss_label[i] >= 0.1)])
                 sum_loss += posi_loss
-                if len(pre_loss[i][(loss_label[i] < 0.1)]) < 3*positive_pixel:
+                if len(pre_loss[i][(loss_label[i] < 0.1)]) < 3 * positive_pixel:
                     nega_loss = torch.mean(pre_loss[i][(loss_label[i] < 0.1)])
                     average_number += len(pre_loss[i][(loss_label[i] < 0.1)])
                 else:
-                    nega_loss = torch.mean(torch.topk(pre_loss[i][(loss_label[i] < 0.1)], 3*positive_pixel)[0])
-                    average_number += 3*positive_pixel
+                    nega_loss = torch.mean(torch.topk(pre_loss[i][(loss_label[i] < 0.1)], 3 * positive_pixel)[0])
+                    average_number += 3 * positive_pixel
                 sum_loss += nega_loss
             else:
                 nega_loss = torch.mean(torch.topk(pre_loss[i], 500)[0])
                 average_number += 500
                 sum_loss += nega_loss
-            #sum_loss += loss/average_number
+            # sum_loss += loss/average_number
 
         return sum_loss
-
-
 
     def forward(self, gh_label, gah_label, p_gh, p_gah, mask):
         gh_label = gh_label
@@ -54,4 +52,4 @@ class Maploss(nn.Module):
 
         char_loss = self.single_image_loss(loss_g, gh_label)
         affi_loss = self.single_image_loss(loss_a, gah_label)
-        return char_loss/loss_g.shape[0] + affi_loss/loss_a.shape[0]
+        return char_loss / loss_g.shape[0] + affi_loss / loss_a.shape[0]

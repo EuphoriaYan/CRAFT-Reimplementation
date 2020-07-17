@@ -204,9 +204,6 @@ if __name__ == '__main__':
     # cv2.waitKey()
     # cv2.imwrite("test.jpg", target_gaussian_heatmap_color)
 
-
-
-
 # # coding=utf-8
 # from math import exp
 # import numpy as np
@@ -355,7 +352,6 @@ if __name__ == '__main__':
 #     cv2.imshow('test', target_gaussian_heatmap_color)
 #     cv2.waitKey()
 #     cv2.imwrite("test.jpg", target_gaussian_heatmap_color)
-
 
 
 # coding=utf-8
