@@ -60,10 +60,10 @@ def saveResult(img_file, img, boxes, dirname='./result/', verticals=None, texts=
             poly = np.array(box).astype(np.int32).reshape((-1))
             strResult = ','.join([str(p) for p in poly]) + '\r\n'
             poly = np.array(box).astype(np.int32)
-            min_x = np.min(poly[:,0])
-            max_x = np.max(poly[:,0])
-            min_y = np.min(poly[:,1])
-            max_y = np.max(poly[:,1])
+            min_x = np.min(poly[:, 0])
+            max_x = np.max(poly[:, 0])
+            min_y = np.min(poly[:, 1])
+            max_y = np.max(poly[:, 1])
             strResult = ','.join([str(min_x), str(min_y), str(max_x), str(max_y)]) + '\r\n'
             f.write(strResult)
 
@@ -76,7 +76,8 @@ def saveResult(img_file, img, boxes, dirname='./result/', verticals=None, texts=
             if texts is not None:
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 font_scale = 0.5
-                cv2.putText(img, "{}".format(texts[i]), (poly[0][0]+1, poly[0][1]+1), font, font_scale, (0, 0, 0), thickness=1)
+                cv2.putText(img, "{}".format(texts[i]), (poly[0][0] + 1, poly[0][1] + 1), font, font_scale, (0, 0, 0),
+                            thickness=1)
                 cv2.putText(img, "{}".format(texts[i]), tuple(poly[0]), font, font_scale, (0, 255, 255), thickness=1)
-    #Save result image
+    # Save result image
     cv2.imwrite(res_img_file, img)
