@@ -8,9 +8,9 @@ Youngmin Baek, Bado Lee, Dongyoon Han, Sangdoo Yun, Hwalsuk Lee
 The full paper is available at: https://arxiv.org/pdf/1904.01941.pdf                                                         
 
 ## Install Requirements:                                                                                                        
-1. PyTroch>=0.4.1             
-2. torchvision>=0.2.1
-3. opencv-python>=3.4.2
+1. PyTroch>=1.5.1            
+2. torchvision>=0.6.1
+3. opencv-python>=4.2.0
 4. check requiremtns.txt 
 5. Nvidia GPUs (we use 2 Titan RTX)
 
@@ -31,12 +31,13 @@ Official Syndata+IC13+IC17: [google drive](https://drive.google.com/open?id=1Jk4
 `Note: When you train the IC15-Data or MLT-Data, please see the annotation in data_loader.py line 92 and line 108-112.`
 
 ### Train for IC15 data based on Syndata pre-trained model
-- download the IC15 data, rename the image file and the gt file for  ch4_training_images and ch4_training_localization_transcription_gt,respectively.
+- download the IC15 data, rename the image file and the gt file for ch4_training_images and ch4_training_localization_transcription_gt,respectively.
 - change the path in basernet/vgg16_bn.py file:                                                                                                                                                              
 > `(/data/CRAFT-pytorch/vgg16_bn-6c64b313.pth -> /your_path/vgg16_bn-6c64b313.pth).You can download the model here.`[baidu](https://pan.baidu.com/s/1_h5qdwYQAToDi_BB5Eg3vg)||[google](https://drive.google.com/open?id=1ZtvGpFQrbmEisB_GhmZb8UQOtvqY_-tW)
-- change the path in trainic15data.py file:                                                                                                                                                                  
->` (1、/data/CRAFT-pytorch/SynthText -> /your_path/SynthText    2、/data/CRAFT-pytorch/real_weights -> /your_path/real_weights)`
-- change the path in trainic15data.py file:                                                                                                                                                                 
+>
+> - change the path in trainic15data.py file:                                                                                                                                                                  
+> ` (1、/data/CRAFT-pytorch/SynthText -> /your_path/SynthText    2、/data/CRAFT-pytorch/real_weights -> /your_path/real_weights)`
+> - change the path in trainic15data.py file:                                                                                                                                                                 
 > `(1、/data/CRAFT-pytorch/1-7.pth -> /your_path/your_pre-trained_model_name 2、/data/CRAFT-pytorch/icdar1317 -> /your_ic15data_path/)`
 - Run **`python trainic15data.py`**
 
@@ -76,7 +77,7 @@ Syndata+IC15(new gaussian map method)         |ICDAR15      |80.36%      |84.25%
 
 First, download the pre-trained VGG-16 model. [baidu](https://pan.baidu.com/s/1_h5qdwYQAToDi_BB5Eg3vg)||[google](https://drive.google.com/open?id=1ZtvGpFQrbmEisB_GhmZb8UQOtvqY_-tW)
 
-Put it into somewhere and change the path in basernet/vgg16_bn.py file. I just put it in pretrain/ .
+Put it into somewhere and change the path in `basernet/vgg16_bn.py` file. In our default code, we just put it in `pretrain/` .
 
 Second, run the command below.
 
