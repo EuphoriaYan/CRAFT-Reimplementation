@@ -76,8 +76,13 @@ def saveResult(img_file, img, boxes, dirname='./result/', verticals=None, texts=
             if texts is not None:
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 font_scale = 0.5
-                cv2.putText(img, "{}".format(texts[i]), (poly[0][0] + 1, poly[0][1] + 1), font, font_scale, (0, 0, 0),
+                cv2.putText(img, "{}".format(texts[i]),
+                            (poly[0][0] + 1, poly[0][1] + 1),
+                            font, font_scale, (0, 0, 0),
                             thickness=1)
-                cv2.putText(img, "{}".format(texts[i]), tuple(poly[0]), font, font_scale, (0, 255, 255), thickness=1)
+                cv2.putText(img, "{}".format(texts[i]),
+                            tuple(poly[0]),
+                            font, font_scale, (0, 255, 255),
+                            thickness=1)
     # Save result image
     cv2.imwrite(res_img_file, img)
