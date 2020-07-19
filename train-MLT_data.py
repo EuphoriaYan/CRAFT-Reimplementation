@@ -14,7 +14,7 @@ import torch.optim as optim
 import random
 import h5py
 import re
-import water
+# import water
 
 from data_loader import ICDAR2015, Synth80k, ICDAR2013
 

@@ -63,6 +63,7 @@ class CRAFT(nn.Module):
 
     def forward(self, x):
         """ Base network """
+        # sources: fc7, relu5_3, relu4_3, relu3_2, relu2_2
         sources = self.basenet(x)
 
         """ U network """

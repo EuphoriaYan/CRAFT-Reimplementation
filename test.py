@@ -81,7 +81,7 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly):
     # preprocessing
     x = imgproc.normalizeMeanVariance(img_resized)
     x = torch.from_numpy(x).permute(2, 0, 1)  # [h, w, c] to [c, h, w]
-    x = Variable(x.unsqueeze(0))  # [c, h, w] to [b, c, h, w]
+    x = x.unsqueeze(0)  # [c, h, w] to [b, c, h, w]
     if cuda:
         x = x.cuda()
 
@@ -89,8 +89,8 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly):
     y, _ = net(x)
 
     # make score and link map
-    score_text = y[0, :, :, 0].cpu().data.numpy()
-    score_link = y[0, :, :, 1].cpu().data.numpy()
+    score_text = y[0, :, :, 0].cpu().detach().numpy()
+    score_link = y[0, :, :, 1].cpu().detach().numpy()
 
     t0 = time.time() - t0
     t1 = time.time()
@@ -145,7 +145,7 @@ def test(modelpara):
         # save score text
         filename, file_ext = os.path.splitext(os.path.basename(image_path))
         mask_file = result_folder + "/res_" + filename + '_mask.jpg'
-        # cv2.imwrite(mask_file, score_text)
+        cv2.imwrite(mask_file, score_text)
 
         file_utils.saveResult(image_path, image[:, :, ::-1], polys, dirname=result_folder)
 
@@ -153,4 +153,5 @@ def test(modelpara):
 
 
 if __name__ == '__main__':
-    test(args.trained_model)
+    with torch.no_grad():
+        test(args.trained_model)
