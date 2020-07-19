@@ -56,8 +56,8 @@ parser.add_argument('--canvas_size', default=2240, type=int, help='image size fo
 parser.add_argument('--mag_ratio', default=2, type=float, help='image magnification ratio')
 parser.add_argument('--poly', default=False, action='store_true', help='enable polygon type')
 parser.add_argument('--show_time', default=False, action='store_true', help='show processing time')
-parser.add_argument('--test_folder', default='/data/', type=str, help='folder path to input images')
-parser.add_argument('--res_folder', default='/data/', type=str, help='folder path to output results')
+parser.add_argument('--test_folder', default='dataset', type=str, help='folder path to input images')
+parser.add_argument('--res_folder', default='output', type=str, help='folder path to output results')
 
 args = parser.parse_args()
 
