@@ -57,16 +57,17 @@ parser.add_argument('--mag_ratio', default=2, type=float, help='image magnificat
 parser.add_argument('--poly', default=False, action='store_true', help='enable polygon type')
 parser.add_argument('--show_time', default=False, action='store_true', help='show processing time')
 parser.add_argument('--test_folder', default='/data/', type=str, help='folder path to input images')
+parser.add_argument('--res_folder', default='/data/', type=str, help='folder path to output results')
 
 args = parser.parse_args()
 
-""" For test images in a folder """
-image_list, _, _ = file_utils.get_files('/data/CRAFT-pytorch/test')
 
-result_folder = '/data/CRAFT-pytorch/result/'
+""" For test images in a folder """
+image_list, _, _ = file_utils.get_files(args.test_folder)
+
+result_folder = args.res_folder
 if not os.path.isdir(result_folder):
     os.mkdir(result_folder)
-
 
 def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly):
     t0 = time.time()
@@ -149,3 +150,7 @@ def test(modelpara):
         file_utils.saveResult(image_path, image[:, :, ::-1], polys, dirname=result_folder)
 
     print("elapsed time : {}s".format(time.time() - t))
+
+
+if __name__ == '__main__':
+    test(args.trained_model)

@@ -5,6 +5,10 @@ from eval import rrc_evaluation_funcs
 import importlib
 import zipfile
 import os
+import numpy as np
+import Polygon as plg
+
+
 def evaluation_imports():
     """
     evaluation_imports: Dictionary ( key = module name , value = alias  )  with python modules used in the evaluation. 
@@ -102,13 +106,13 @@ def evaluate_method(gtFilePath, submFilePath, evaluationParams):
         return points
 
     def get_union(pD, pG):
-        areaA = pD.area();
-        areaB = pG.area();
-        return areaA + areaB - get_intersection(pD, pG);
+        areaA = pD.area()
+        areaB = pG.area()
+        return areaA + areaB - get_intersection(pD, pG)
 
     def get_intersection_over_union(pD, pG):
         try:
-            return get_intersection(pD, pG) / get_union(pD, pG);
+            return get_intersection(pD, pG) / get_union(pD, pG)
         except:
             return 0
 
@@ -147,11 +151,11 @@ def evaluate_method(gtFilePath, submFilePath, evaluationParams):
     gt = rrc_evaluation_funcs.load_zip_file(gtFilePath, evaluationParams['GT_SAMPLE_NAME_2_ID'])
     subm = rrc_evaluation_funcs.load_zip_file(submFilePath, evaluationParams['DET_SAMPLE_NAME_2_ID'], True)
 
-    numGlobalCareGt = 0;
-    numGlobalCareDet = 0;
+    numGlobalCareGt = 0
+    numGlobalCareDet = 0
 
-    arrGlobalConfidences = [];
-    arrGlobalMatches = [];
+    arrGlobalConfidences = []
+    arrGlobalMatches = []
 
     for resFile in gt:
 
@@ -178,9 +182,9 @@ def evaluate_method(gtFilePath, submFilePath, evaluationParams):
         pairs = []
         detMatchedNums = []
 
-        arrSampleConfidences = [];
-        arrSampleMatch = [];
-        sampleAP = 0;
+        arrSampleConfidences = []
+        arrSampleMatch = []
+        sampleAP = 0
 
         evaluationLog = ""
 
@@ -256,8 +260,10 @@ def evaluate_method(gtFilePath, submFilePath, evaluationParams):
 
                 for gtNum in range(len(gtPols)):
                     for detNum in range(len(detPols)):
-                        if gtRectMat[gtNum] == 0 and detRectMat[
-                            detNum] == 0 and gtNum not in gtDontCarePolsNum and detNum not in detDontCarePolsNum:
+                        if gtRectMat[gtNum] == 0 \
+                                and detRectMat[detNum] == 0 \
+                                and gtNum not in gtDontCarePolsNum \
+                                and detNum not in detDontCarePolsNum:
                             if iouMat[gtNum, detNum] > evaluationParams['IOU_CONSTRAINT']:
                                 gtRectMat[gtNum] = 1
                                 detRectMat[detNum] = 1
@@ -275,8 +281,8 @@ def evaluate_method(gtFilePath, submFilePath, evaluationParams):
                         arrSampleConfidences.append(confidencesList[detNum])
                         arrSampleMatch.append(match)
 
-                        arrGlobalConfidences.append(confidencesList[detNum]);
-                        arrGlobalMatches.append(match);
+                        arrGlobalConfidences.append(confidencesList[detNum])
+                        arrGlobalMatches.append(match)
 
         numGtCare = (len(gtPols) - len(gtDontCarePolsNum))
         numDetCare = (len(detPols) - len(detDontCarePolsNum))
@@ -326,14 +332,14 @@ def evaluate_method(gtFilePath, submFilePath, evaluationParams):
 
     resDict = {'calculated': True, 'Message': '', 'method': methodMetrics, 'per_sample': perSampleMetrics}
 
-    return resDict;
+    return resDict
 
 
 def eval_2015(res_folder):
     params = {}
     current_folder = os.path.join(os.path.dirname(__file__))
     submitfile = os.path.join(current_folder, 'submit.zip')
-    #print(submitfile)
+    # print(submitfile)
     filenames = os.listdir(res_folder)
     zip = zipfile.ZipFile(submitfile, "w", zipfile.ZIP_DEFLATED)
     for filename in filenames:
@@ -348,5 +354,5 @@ def eval_2015(res_folder):
 
 def getresult():
     # rrc_evaluation_funcs.main_evaluation(None, default_evaluation_params, validate_data, evaluate_method)
-    #eval_2015('../../test')
+    # eval_2015('../../test')
     eval_2015('/data/CRAFT-pytorch/result')

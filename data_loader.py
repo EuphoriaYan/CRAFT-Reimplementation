@@ -90,7 +90,7 @@ def random_crop(imgs, img_size, character_bboxes):
     word_bboxes = np.array(word_bboxes, np.int32)
 
     #### IC15 for 0.6, MLT for 0.35 #####
-    if random.random() > 0.6 and len(word_bboxes) > 0:
+    if random.random() > 0.35 and len(word_bboxes) > 0:
         sample_bboxes = word_bboxes[random.randint(0, len(word_bboxes) - 1)]
         left = max(sample_bboxes[1, 0] - img_size[0], 0)
         top = max(sample_bboxes[1, 1] - img_size[0], 0)

@@ -23,14 +23,16 @@ from test import test
 from math import exp
 
 ###import file#######
+'''
 from augmentation import random_rot, crop_img_bboxes
 from gaussianmap import gaussion_transform, four_point_transform
 from generateheatmap import add_character, generate_target, add_affinity, generate_affinity, sort_box, real_affinity, \
     generate_affinity_box
+'''
 from mseloss import Maploss
 
 from collections import OrderedDict
-from eval13.script import getresult
+# from eval13.script import getresult
 
 from PIL import Image
 from torchvision.transforms import transforms
@@ -168,13 +170,10 @@ if __name__ == '__main__':
             mask = torch.cat((syn_mask, real_mask), 0)
             # affinity_mask = torch.cat((syn_mask, real_affinity_mask), 0)
 
-            images = Variable(images.type(torch.FloatTensor)).cuda()
-            gh_label = gh_label.type(torch.FloatTensor)
-            gah_label = gah_label.type(torch.FloatTensor)
-            gh_label = Variable(gh_label).cuda()
-            gah_label = Variable(gah_label).cuda()
-            mask = mask.type(torch.FloatTensor)
-            mask = Variable(mask).cuda()
+            images = Variable(images.float()).cuda()
+            gh_label = Variable(gh_label.float()).cuda()
+            gah_label = Variable(gah_label.float()).cuda()
+            mask = Variable(mask.float()).cuda()
             # affinity_mask = affinity_mask.type(torch.FloatTensor)
             # affinity_mask = Variable(affinity_mask).cuda()
 
@@ -191,12 +190,13 @@ if __name__ == '__main__':
             loss_value += loss.item()
             if index % 2 == 0 and index > 0:
                 et = time.time()
-                print(
-                    'epoch {}:({}/{}) batch || training time for 2 batch {} || training loss {} ||'.format(epoch, index,
-                                                                                                           len(
-                                                                                                               real_data_loader),
-                                                                                                           et - st,
-                                                                                                           loss_value / 2))
+                print('epoch {}:({}/{}) batch || training time for 2 batch {} || training loss {} ||'.format(
+                    epoch,
+                    index,
+                    len(real_data_loader),
+                    et - st,
+                    loss_value / 2)
+                )
                 loss_time = 0
                 loss_value = 0
                 st = time.time()
