@@ -102,7 +102,8 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly):
     boxes = craft_utils.adjustResultCoordinates(boxes, ratio_w, ratio_h)
     polys = craft_utils.adjustResultCoordinates(polys, ratio_w, ratio_h)
     for k in range(len(polys)):
-        if polys[k] is None: polys[k] = boxes[k]
+        if polys[k] is None:
+            polys[k] = boxes[k]
 
     t1 = time.time() - t1
 

@@ -64,6 +64,7 @@ class CRAFT(nn.Module):
     def forward(self, x):
         """ Base network """
         # sources: fc7, relu5_3, relu4_3, relu3_2, relu2_2
+        # channels: 1024, 512, 512, 256, 128
         sources = self.basenet(x)
 
         """ U network """
@@ -80,9 +81,9 @@ class CRAFT(nn.Module):
 
         y = F.interpolate(y, size=sources[4].size()[2:], mode='bilinear', align_corners=False)
         y = torch.cat([y, sources[4]], dim=1)
-        feature = self.upconv4(y)
+        feature = self.upconv4(y)  # (batch_size, 32, w/h*1120, 1120)
 
-        y = self.conv_cls(feature)
+        y = self.conv_cls(feature)  # (batch_size, 2, w/h*1120, 1120)
 
         return y.permute(0, 2, 3, 1), feature
 
