@@ -7,3 +7,4 @@ dataset/
 eval/
 *_test.py
 output/
+scripts/run_test.sh
