@@ -8,6 +8,7 @@ import numpy as np
 import cv2
 import math
 from PIL import Image
+from typing import List
 
 """ auxilary functions """
 
@@ -251,9 +252,76 @@ def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly
     if poly:
         polys = getPoly_core(boxes, labels, mapper, linkmap)
     else:
+        boxes = adjustColumeBoxes(boxes)
         polys = [None] * len(boxes)
 
     return boxes, polys
+
+
+# boxes: List[ ndarray:(4, 2) ]
+# [[945.   4.], [990.   4.], [990.  46.], [945.  46.]]
+def adjustColumeBoxes(boxes: List, threshold=0.75):
+
+    def cal_IoU(array1, array2):
+        array1_l = array1[0, 0]
+        array1_r = array1[1, 0]
+        array2_l = array2[0, 0]
+        array2_r = array2[1, 0]
+        in_l = max(array1_r, array2_r) - min(array1_l, array2_l)
+        # in_l = max(0, in_l)
+        un_l = min(array1_r, array2_r) - max(array1_l, array2_l)
+        un_l = max(0, un_l)
+        return un_l / in_l
+
+    def check_vertical_dis(array1, array2):
+        array1_u = array1[0, 1]
+        array1_d = array1[2, 1]
+        array2_u = array2[0, 1]
+        array2_d = array2[2, 1]
+        dis = max(array1_u, array2_u) - min(array1_d, array2_d)
+        array2_ver = array2_d - array2_u
+        if dis < array2_ver:
+            return True
+        else:
+            return False
+
+    def mergeArray(array1, array2):
+        array1_l = array1[0, 0]
+        array1_r = array1[1, 0]
+        array1_u = array1[0, 1]
+        array1_d = array1[2, 1]
+        array2_l = array2[0, 0]
+        array2_r = array2[1, 0]
+        array2_u = array2[0, 1]
+        array2_d = array2[2, 1]
+        new_array_l = min(array1_l, array2_l)
+        new_array_r = max(array1_r, array2_r)
+        new_array_u = min(array1_u, array2_u)
+        new_array_d = max(array1_d, array2_d)
+        new_array = [[new_array_l, new_array_u], [new_array_r, new_array_u],
+                     [new_array_r, new_array_d], [new_array_l, new_array_d]]
+        new_array = np.array(new_array, dtype=np.float)
+        return new_array
+
+    new_boxes = []
+    vis = [False for _ in range(len(boxes))]
+    for i in range(len(boxes)):
+        if vis[i]:
+            continue
+        cur_box = boxes[i]
+        flag = True
+        while flag:
+            flag = False
+            for j in range(i + 1, len(boxes)):
+                if vis[j]:
+                    continue
+                if cal_IoU(cur_box, boxes[j]) > threshold and check_vertical_dis(cur_box, boxes[j]):
+                    vis[j] = True
+                    cur_box = mergeArray(cur_box, boxes[j])
+                    flag = True
+        vis[i] = True
+        new_boxes.append(cur_box)
+    return new_boxes
 
 
 def adjustResultCoordinates(polys, ratio_w, ratio_h, ratio_net=2):
