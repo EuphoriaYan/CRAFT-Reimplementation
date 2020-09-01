@@ -253,6 +253,7 @@ def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly
         polys = getPoly_core(boxes, labels, mapper, linkmap)
     else:
         boxes = adjustColumeBoxes(boxes)
+        # boxes = adjustColumeBoxes(boxes)
         polys = [None] * len(boxes)
 
     return boxes, polys
@@ -260,7 +261,7 @@ def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly
 
 # boxes: List[ ndarray:(4, 2) ]
 # [[945.   4.], [990.   4.], [990.  46.], [945.  46.]]
-def adjustColumeBoxes(boxes: List, threshold=0.75):
+def adjustColumeBoxes(boxes: List, row_threshold=0.67, col_threshold=1.35, union_threshold=0.8):
 
     def cal_IoU(array1, array2):
         array1_l = array1[0, 0]
@@ -280,7 +281,7 @@ def adjustColumeBoxes(boxes: List, threshold=0.75):
         array2_d = array2[2, 1]
         dis = max(array1_u, array2_u) - min(array1_d, array2_d)
         array2_ver = array2_d - array2_u
-        if dis < array2_ver:
+        if dis < array2_ver * col_threshold:
             return True
         else:
             return False
@@ -294,8 +295,10 @@ def adjustColumeBoxes(boxes: List, threshold=0.75):
         array2_r = array2[1, 0]
         array2_u = array2[0, 1]
         array2_d = array2[2, 1]
-        new_array_l = min(array1_l, array2_l)
-        new_array_r = max(array1_r, array2_r)
+        array1_area = (array1_r - array1_l) * (array1_d - array1_u)
+        array2_area = (array2_r - array2_l) * (array2_d - array2_u)
+        new_array_l = (array1_l * array1_area + array2_l * array2_area) / (array1_area + array2_area)
+        new_array_r = (array1_r * array1_area + array2_r * array2_area) / (array1_area + array2_area)
         new_array_u = min(array1_u, array2_u)
         new_array_d = max(array1_d, array2_d)
         new_array = [[new_array_l, new_array_u], [new_array_r, new_array_u],
@@ -303,6 +306,58 @@ def adjustColumeBoxes(boxes: List, threshold=0.75):
         new_array = np.array(new_array, dtype=np.float)
         return new_array
 
+    def getArea(array1):
+        array1_l = array1[0, 0]
+        array1_r = array1[1, 0]
+        array1_u = array1[0, 1]
+        array1_d = array1[2, 1]
+        array1_area = (array1_r - array1_l) * (array1_d - array1_u)
+        return array1_area
+
+    def checkArrayUnion(array1, array2):
+        array1_l = array1[0, 0]
+        array1_r = array1[1, 0]
+        array1_u = array1[0, 1]
+        array1_d = array1[2, 1]
+        array2_l = array2[0, 0]
+        array2_r = array2[1, 0]
+        array2_u = array2[0, 1]
+        array2_d = array2[2, 1]
+        arrayU_l = max(array1_l, array2_l)
+        arrayU_r = min(array1_r, array2_r)
+        arrayU_u = max(array1_u, array2_u)
+        arrayU_d = min(array1_d, array2_d)
+        if arrayU_r > arrayU_l and arrayU_d > arrayU_u:
+            arrayU_area = (arrayU_r - arrayU_l) * (arrayU_d - arrayU_u)
+            array1_area = (array1_r - array1_l) * (array1_d - array1_u)
+            array2_area = (array2_r - array2_l) * (array2_d - array2_u)
+            if arrayU_area > array1_area * union_threshold or arrayU_area > array2_area * union_threshold:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def getArrayUnion(array1, array2):
+        array1_l = array1[0, 0]
+        array1_r = array1[1, 0]
+        array1_u = array1[0, 1]
+        array1_d = array1[2, 1]
+        array2_l = array2[0, 0]
+        array2_r = array2[1, 0]
+        array2_u = array2[0, 1]
+        array2_d = array2[2, 1]
+        arrayU_l = max(array1_l, array2_l)
+        arrayU_r = min(array1_r, array2_r)
+        arrayU_u = max(array1_u, array2_u)
+        arrayU_d = min(array1_d, array2_d)
+        if arrayU_r > arrayU_l and arrayU_d > arrayU_u:
+            arrayU_area = (arrayU_r - arrayU_l) * (arrayU_d - arrayU_u)
+            return arrayU_area
+        else:
+            return 0
+
+    # 上下合并box
     new_boxes = []
     vis = [False for _ in range(len(boxes))]
     for i in range(len(boxes)):
@@ -315,13 +370,45 @@ def adjustColumeBoxes(boxes: List, threshold=0.75):
             for j in range(i + 1, len(boxes)):
                 if vis[j]:
                     continue
-                if cal_IoU(cur_box, boxes[j]) > threshold and check_vertical_dis(cur_box, boxes[j]):
+                if cal_IoU(cur_box, boxes[j]) > row_threshold and check_vertical_dis(cur_box, boxes[j]):
                     vis[j] = True
                     cur_box = mergeArray(cur_box, boxes[j])
                     flag = True
         vis[i] = True
         new_boxes.append(cur_box)
-    return new_boxes
+    # 合并交集比例过大的box
+    merge_boxes = []
+    vis = [False for _ in range(len(new_boxes))]
+    for i in range(len(new_boxes)):
+        if vis[i]:
+            continue
+        cur_box = new_boxes[i]
+        flag = True
+        while flag:
+            flag = False
+            for j in range(i + 1, len(new_boxes)):
+                if vis[j]:
+                    continue
+                if checkArrayUnion(cur_box, new_boxes[j]):
+                    vis[j] = True
+                    cur_box = mergeArray(cur_box, new_boxes[j])
+                    flag = True
+        vis[i] = True
+        merge_boxes.append(cur_box)
+    # 和其他所有box有交集且比例过大的删除
+    final_boxes = []
+    cover_area = [0 for _ in range(len(merge_boxes))]
+    for i in range(len(merge_boxes)):
+        for j in range(i + 1, len(merge_boxes)):
+            if i == j:
+                continue
+            union_area = getArrayUnion(merge_boxes[i], merge_boxes[j])
+            cover_area[i] += union_area
+            cover_area[j] += union_area
+    for i in range(len(merge_boxes)):
+        if cover_area[i] <= getArea(merge_boxes[i]) * union_threshold:
+            final_boxes.append(merge_boxes[i])
+    return final_boxes
 
 
 def adjustResultCoordinates(polys, ratio_w, ratio_h, ratio_net=2):
