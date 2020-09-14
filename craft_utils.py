@@ -22,7 +22,7 @@ def warpCoord(Minv, pt):
 """ end of auxilary functions """
 
 
-def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text):
+def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text, force_colume):
     # prepare data
     linkmap = linkmap.copy()
     textmap = textmap.copy()
@@ -32,8 +32,11 @@ def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text)
     ret, text_score = cv2.threshold(textmap, low_text, 1, 0)
     ret, link_score = cv2.threshold(linkmap, link_threshold, 1, 0)
 
-    # text_score_comb = np.clip(text_score + link_score, 0, 1)
-    text_score_comb = text_score.copy()
+    if force_colume:
+        text_score_comb = text_score.copy()
+    else:
+        text_score_comb = np.clip(text_score + link_score, 0, 1)
+
     text_score_comb = text_score_comb.astype(np.uint8)
     # Image.fromarray(text_score_comb * 255).show()
 
@@ -138,7 +141,7 @@ def getPoly_core(boxes, labels, mapper, linkmap):
 
         # pass if max_len is similar to h
         if h * max_len_ratio < max_len:
-            polys.append(None);
+            polys.append(None)
             continue
 
         # get pivot points with fixed length
@@ -181,7 +184,7 @@ def getPoly_core(boxes, labels, mapper, linkmap):
 
         # pass if num of pivots is not sufficient or segment widh is smaller than character height 
         if None in pp or seg_w < np.max(seg_height) * 0.25:
-            polys.append(None);
+            polys.append(None)
             continue
 
         # calc median maximum of pivot points
@@ -226,12 +229,11 @@ def getPoly_core(boxes, labels, mapper, linkmap):
 
         # pass if boundary of polygon is not found
         if not (isSppFound and isEppFound):
-            polys.append(None);
+            polys.append(None)
             continue
 
         # make final polygon
-        poly = []
-        poly.append(warpCoord(Minv, (spp[0], spp[1])))
+        poly = [warpCoord(Minv, (spp[0], spp[1]))]
         for p in new_pp:
             poly.append(warpCoord(Minv, (p[0], p[1])))
         poly.append(warpCoord(Minv, (epp[0], epp[1])))
@@ -246,21 +248,20 @@ def getPoly_core(boxes, labels, mapper, linkmap):
     return polys
 
 
-def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly=False):
-    boxes, labels, mapper = getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text)
+def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly=False, force_colume=False):
+    boxes, labels, mapper = getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text, force_colume)
 
     if poly:
         polys = getPoly_core(boxes, labels, mapper, linkmap)
     else:
-        boxes = adjustColumeBoxes(boxes)
-        # boxes = adjustColumeBoxes(boxes)
+        # convert single char box to colume box
+        if force_colume:
+            boxes = adjustColumeBoxes(boxes)
         polys = [None] * len(boxes)
 
     return boxes, polys
 
 
-# boxes: List[ ndarray:(4, 2) ]
-# [[945.   4.], [990.   4.], [990.  46.], [945.  46.]]
 def adjustColumeBoxes(boxes: List, row_threshold=0.67, col_threshold=1.35, union_threshold=0.8):
 
     def cal_IoU(array1, array2):

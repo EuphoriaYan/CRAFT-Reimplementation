@@ -9,3 +9,5 @@ eval/
 output/
 scripts/run_test_best_sp.sh
 diaolong/
+
+test*/
