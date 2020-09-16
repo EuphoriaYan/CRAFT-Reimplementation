@@ -420,16 +420,16 @@ def adjustColumeBoxes(boxes: List, row_threshold=0.67, col_threshold=1.35, union
 
 def cluster_boxes(boxes, type='DBSCAN'):
     switch = {
-        'DBSCAN': DBSCAN(min_samples=2, eps=20),
+        'DBSCAN': DBSCAN(min_samples=1, eps=10),
         'MeanShift': MeanShift(bandwidth=0.3),
-        'OPTICS': OPTICS(min_samples=2, eps=30),
+        'OPTICS': OPTICS(min_samples=1, eps=20),
         'Birch': Birch(n_clusters=None)
     }
     cluster = switch[type]
     boxes_data = [[b['l'], b['r']] for b in boxes]
     boxes_data = np.array(boxes_data)
     labels = cluster.fit_predict(boxes_data)
-    plt.scatter(boxes_data[:, 0], boxes_data[:, 1], c=labels)
+    plt.scatter(boxes_data[:, 0], boxes_data[:, 1], s=1, c=labels)
     plt.show()
     classified_box_ids = collections.defaultdict(list)
     for idx, label in enumerate(labels):
