@@ -4,11 +4,16 @@ MIT License
 """
 
 # -*- coding: utf-8 -*-
+import itertools
+from functools import reduce
+
 import numpy as np
 import cv2
 import math
+import collections
 from PIL import Image
 from typing import List
+from sklearn.cluster import DBSCAN, KMeans, MeanShift, OPTICS, Birch
 
 """ auxilary functions """
 
@@ -22,7 +27,7 @@ def warpCoord(Minv, pt):
 """ end of auxilary functions """
 
 
-def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text, force_colume):
+def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text, ocr_type):
     # prepare data
     linkmap = linkmap.copy()
     textmap = textmap.copy()
@@ -32,7 +37,7 @@ def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text,
     ret, text_score = cv2.threshold(textmap, low_text, 1, 0)
     ret, link_score = cv2.threshold(linkmap, link_threshold, 1, 0)
 
-    if force_colume:
+    if ocr_type == 'force_colume' or ocr_type == 'single_char':
         text_score_comb = text_score.copy()
     else:
         text_score_comb = np.clip(text_score + link_score, 0, 1)
@@ -248,14 +253,14 @@ def getPoly_core(boxes, labels, mapper, linkmap):
     return polys
 
 
-def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly=False, force_colume=False):
-    boxes, labels, mapper = getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text, force_colume)
+def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly=False, ocr_type='normal'):
+    boxes, labels, mapper = getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text, ocr_type)
 
     if poly:
         polys = getPoly_core(boxes, labels, mapper, linkmap)
     else:
         # convert single char box to colume box
-        if force_colume:
+        if ocr_type == 'force_colume':
             boxes = adjustColumeBoxes(boxes)
         polys = [None] * len(boxes)
 
@@ -410,6 +415,62 @@ def adjustColumeBoxes(boxes: List, row_threshold=0.67, col_threshold=1.35, union
         if cover_area[i] <= getArea(merge_boxes[i]) * union_threshold:
             final_boxes.append(merge_boxes[i])
     return final_boxes
+
+
+def cluster_boxes(boxes, type='Birch'):
+    switch = {
+        'DBSCAN': DBSCAN(min_samples=2, eps=0.3),
+        'MeanShift': MeanShift(bandwidth=0.3),
+        'OPTICS': OPTICS(min_samples=2, eps=0.3),
+        'Birch': Birch(n_clusters=None)
+    }
+    cluster = switch[type]
+    boxes_data = [(b['l'], b['r']) for b in boxes]
+    cluster.fit(boxes_data)
+    classified_box_ids = collections.defaultdict(List)
+    for i in range(len(boxes)):
+        box = boxes[i]
+        l, r = box['l'], box['r']
+        label = cluster.predict((l, r))
+        classified_box_ids[label].append(i)
+    return classified_box_ids
+
+
+def list_sort(box_list):
+    l = [b['l'] for b in box_list]
+    r = [b['r'] for b in box_list]
+    l = np.mean(l)
+    r = np.mean(r)
+    return (l + r) / 2
+
+def box_sort(box):
+    u = box['u']
+    d = box['d']
+    return (u + d) / 2
+
+
+def cluster_sort(boxes):
+    """
+    :param boxes:
+    :return: cluster then sorted boxes
+        l = array[0, 0]
+        r = array[1, 0]
+        u = array[0, 1]
+        d = array[2, 1]
+    """
+    boxes_lrud = [{'l': b[0, 0], 'r': b[1, 0], 'u': b[0, 1], 'd': b[2, 1], 'id': id} for id, b in enumerate(boxes)]
+    classified_box_ids = cluster_boxes(boxes_lrud)
+    classified_boxes = []
+    for k in classified_box_ids.keys():
+        box_ids = classified_box_ids[k]
+        classified_boxes.append([boxes_lrud[box_id] for box_id in box_ids])
+    classified_boxes = sorted(classified_boxes, key=list_sort, reverse=True)
+    new_classifier_boxes = []
+    for box_list in classified_boxes:
+        new_classifier_boxes.append(sorted(box_list, key=box_sort, reverse=False))
+    new_classifier_boxes = list(itertools.chain.from_iterable(new_classifier_boxes))
+    new_classifier_boxes = [boxes[b['id']] for b in new_classifier_boxes]
+    return new_classifier_boxes
 
 
 def adjustResultCoordinates(polys, ratio_w, ratio_h, ratio_net=2):
