@@ -420,7 +420,7 @@ def adjustColumeBoxes(boxes: List, row_threshold=0.67, col_threshold=1.35, union
 
 def cluster_boxes(boxes, type='DBSCAN'):
     switch = {
-        'DBSCAN': DBSCAN(min_samples=1, eps=10),
+        'DBSCAN': DBSCAN(min_samples=1, eps=7),
         'MeanShift': MeanShift(bandwidth=0.3),
         'OPTICS': OPTICS(min_samples=1, eps=20),
         'Birch': Birch(n_clusters=None)
