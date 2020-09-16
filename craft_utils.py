@@ -429,8 +429,10 @@ def cluster_boxes(boxes, type='DBSCAN'):
     boxes_data = [[b['l'], b['r']] for b in boxes]
     boxes_data = np.array(boxes_data)
     labels = cluster.fit_predict(boxes_data)
+    '''
     plt.scatter(boxes_data[:, 0], boxes_data[:, 1], s=1, c=labels)
     plt.show()
+    '''
     classified_box_ids = collections.defaultdict(list)
     for idx, label in enumerate(labels):
         classified_box_ids[label].append(idx)
@@ -438,11 +440,12 @@ def cluster_boxes(boxes, type='DBSCAN'):
 
 
 def list_sort(box_list):
-    l = [b['l'] for b in box_list]
     r = [b['r'] for b in box_list]
-    l = np.mean(l)
+    length = [b['r'] - b['l'] for b in box_list]
     r = np.mean(r)
-    return (l + r) / 2
+    length = np.mean(length)
+    return r + length
+
 
 def box_sort(box):
     u = box['u']
