@@ -13,6 +13,7 @@ import math
 import collections
 from PIL import Image
 from typing import List
+from matplotlib import pyplot as plt
 from sklearn.cluster import DBSCAN, KMeans, MeanShift, OPTICS, Birch
 
 """ auxilary functions """
@@ -417,22 +418,22 @@ def adjustColumeBoxes(boxes: List, row_threshold=0.67, col_threshold=1.35, union
     return final_boxes
 
 
-def cluster_boxes(boxes, type='Birch'):
+def cluster_boxes(boxes, type='DBSCAN'):
     switch = {
-        'DBSCAN': DBSCAN(min_samples=2, eps=0.3),
+        'DBSCAN': DBSCAN(min_samples=2, eps=20),
         'MeanShift': MeanShift(bandwidth=0.3),
-        'OPTICS': OPTICS(min_samples=2, eps=0.3),
+        'OPTICS': OPTICS(min_samples=2, eps=30),
         'Birch': Birch(n_clusters=None)
     }
     cluster = switch[type]
-    boxes_data = [(b['l'], b['r']) for b in boxes]
-    cluster.fit(boxes_data)
-    classified_box_ids = collections.defaultdict(List)
-    for i in range(len(boxes)):
-        box = boxes[i]
-        l, r = box['l'], box['r']
-        label = cluster.predict((l, r))
-        classified_box_ids[label].append(i)
+    boxes_data = [[b['l'], b['r']] for b in boxes]
+    boxes_data = np.array(boxes_data)
+    labels = cluster.fit_predict(boxes_data)
+    plt.scatter(boxes_data[:, 0], boxes_data[:, 1], c=labels)
+    plt.show()
+    classified_box_ids = collections.defaultdict(list)
+    for idx, label in enumerate(labels):
+        classified_box_ids[label].append(idx)
     return classified_box_ids
 
 
