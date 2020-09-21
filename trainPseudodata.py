@@ -68,7 +68,7 @@ parser.add_argument('--weight_decay', default=5e-4, type=float,
                     help='Weight decay for SGD')
 parser.add_argument('--gamma', default=0.1, type=float,
                     help='Gamma update for SGD')
-parser.add_argument('--epochs', default=100, type=int,
+parser.add_argument('--epochs', default=200, type=int,
                     help='Number of train epochs')
 
 
@@ -117,9 +117,13 @@ if __name__ == '__main__':
 
     net = CRAFT()
 
-    net.load_state_dict(copyStateDict(torch.load('pretrain/craft_mlt_25k.pth')))
+    pretrained_path = 'pretrain/craft_mlt_25k.pth'
+    net.load_state_dict(copyStateDict(torch.load(pretrained_path)))
+    print('load state dict from ' + pretrained_path, flush=True)
 
+    # net = net.cuda()
     net = torch.nn.DataParallel(net, device_ids=[0])
+
     cudnn.benchmark = True
     net.train()
     realdata = PseudoChinesePage(net, 'dataset/book_pages', target_size=768)
