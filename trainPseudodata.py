@@ -49,8 +49,6 @@ random.seed(42)
 #     def __call__(self, gt):
 #         image_name = gt['imnames'][0]
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-
 parser = argparse.ArgumentParser(description='CRAFT reimplementation')
 
 ''' -- Train Settings -- '''
@@ -115,7 +113,7 @@ def adjust_learning_rate(optimizer, gamma, step):
 
 if __name__ == '__main__':
 
-    net = CRAFT()
+    net = CRAFT(pretrained=True, freeze=False)
     print(net, flush=True)
 
     pretrained_path = 'pretrain/craft_mlt_25k.pth'
