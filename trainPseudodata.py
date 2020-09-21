@@ -169,7 +169,7 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, o
 
 if __name__ == '__main__':
 
-    net = CRAFT(pretrained=True, freeze=False)
+    net = CRAFT(pretrained=True, freeze=True)
     print(net, flush=True)
 
     pretrained_path = 'pretrain/craft_mlt_25k.pth'
@@ -188,7 +188,7 @@ if __name__ == '__main__':
         shuffle=True,
         num_workers=0,
         drop_last=True,
-        pin_memory=False
+        pin_memory=True
     )
     image_list, _, _ = file_utils.get_files(args.test_folder)
 
