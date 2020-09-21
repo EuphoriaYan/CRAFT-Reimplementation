@@ -683,7 +683,6 @@ class PseudoChinesePage(craft_base_dataset):
                 pursedo_bboxes, bbox_region_scores, confidence = self.inference_pursedo_bboxes(self.net, image,
                                                                                                word_bboxes[i],
                                                                                                words[i],
-                                                                                               gt_path,
                                                                                                viz=self.viz)
                 confidences.append(confidence)
                 cv2.fillPoly(confidence_mask, [np.int32(word_bboxes[i])], (confidence))
