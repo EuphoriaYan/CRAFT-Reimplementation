@@ -127,7 +127,7 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, o
     return boxes, polys, ret_score_text
 
 
-def test(modelpara, args):
+def test(modelpara):
     # load net
     net = CRAFT()  # initialize
 
@@ -138,8 +138,7 @@ def test(modelpara, args):
         net.load_state_dict(copyStateDict(torch.load(modelpara, map_location='cpu')))
 
     if args.cuda:
-        net = net.cuda()
-        net = torch.nn.DataParallel(net)
+        net = torch.nn.DataParallel(net, device_ids=[1])
         cudnn.benchmark = False
 
     net.eval()
@@ -165,4 +164,4 @@ def test(modelpara, args):
 
 if __name__ == '__main__':
     with torch.no_grad():
-        test(args.trained_model, args)
+        test(args.trained_model)

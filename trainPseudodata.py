@@ -15,7 +15,9 @@ import random
 import h5py
 import re
 # import water
-from test import test
+import file_utils
+import imgproc
+from test import test, test_net
 
 from math import exp
 from data_loader import ICDAR2015, Synth80k, ICDAR2013, PseudoChinesePage
@@ -46,6 +48,9 @@ random.seed(42)
 #         pass
 #     def __call__(self, gt):
 #         image_name = gt['imnames'][0]
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,3"
+
 parser = argparse.ArgumentParser(description='CRAFT reimplementation')
 
 ''' -- Train Settings -- '''
@@ -116,9 +121,7 @@ if __name__ == '__main__':
 
     net.load_state_dict(copyStateDict(torch.load('pretrain/craft_mlt_25k.pth')))
 
-    net = net.cuda()
-
-    net = torch.nn.DataParallel(net, device_ids=[2, 3]).cuda()
+    net = torch.nn.DataParallel(net, device_ids=[0])
     cudnn.benchmark = True
     net.train()
     realdata = PseudoChinesePage(net, 'dataset/book_pages', target_size=768)
@@ -130,6 +133,7 @@ if __name__ == '__main__':
         drop_last=True,
         pin_memory=True
     )
+    image_list, _, _ = file_utils.get_files(args.test_folder)
 
     optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     criterion = Maploss()
@@ -190,6 +194,19 @@ if __name__ == '__main__':
 
         print('Saving state, iter:', epoch)
         torch.save(net.module.state_dict(), 'weights/CRAFT_clr_' + repr(epoch) + '.pth')
-        test('weights/CRAFT_clr_' + repr(epoch) + '.pth', args)
+
+        for k, image_path in enumerate(image_list):
+            print("Test image {:d}/{:d}: {:s}".format(k + 1, len(image_list), image_path), end='\r')
+            image = imgproc.loadImage(image_path)
+
+            bboxes, polys, score_text = test_net(net, image, args.text_threshold, args.link_threshold, args.low_text,
+                                                 args.cuda, args.poly, args.ocr_type)
+            # save score text
+            filename, file_ext = os.path.splitext(os.path.basename(image_path))
+            # mask_file = result_folder + "/res_" + filename + '_mask.jpg'
+            # cv2.imwrite(mask_file, score_text)
+
+            file_utils.saveResult(image_path, image[:, :, ::-1], polys, dirname='weights/' + repr(epoch))
+        # test('weights/CRAFT_clr_' + repr(epoch) + '.pth')
         # test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
-        getresult()
+        # getresult()

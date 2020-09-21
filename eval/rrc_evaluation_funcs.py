@@ -138,14 +138,14 @@ def get_tl_line_values(line, LTRB=True, withTranscription=False, withConfidence=
     Returns values from a textline. Points , [Confidences], [Transcriptions]
     """
     confidence = 0.0
-    transcription = "";
+    transcription = ""
     points = []
 
-    numPoints = 4;
+    numPoints = 4
 
     if LTRB:
 
-        numPoints = 4;
+        numPoints = 4
 
         if withTranscription and withConfidence:
             m = re.match(
@@ -181,12 +181,12 @@ def get_tl_line_values(line, LTRB=True, withTranscription=False, withConfidence=
         points = [float(m.group(i)) for i in range(1, (numPoints + 1))]
 
         if (imWidth > 0 and imHeight > 0):
-            validate_point_inside_bounds(xmin, ymin, imWidth, imHeight);
-            validate_point_inside_bounds(xmax, ymax, imWidth, imHeight);
+            validate_point_inside_bounds(xmin, ymin, imWidth, imHeight)
+            validate_point_inside_bounds(xmax, ymax, imWidth, imHeight)
 
     else:
 
-        numPoints = 8;
+        numPoints = 8
 
         if withTranscription and withConfidence:
             m = re.match(
@@ -218,10 +218,10 @@ def get_tl_line_values(line, LTRB=True, withTranscription=False, withConfidence=
         validate_clockwise_points(points)
 
         if (imWidth > 0 and imHeight > 0):
-            validate_point_inside_bounds(points[0], points[1], imWidth, imHeight);
-            validate_point_inside_bounds(points[2], points[3], imWidth, imHeight);
-            validate_point_inside_bounds(points[4], points[5], imWidth, imHeight);
-            validate_point_inside_bounds(points[6], points[7], imWidth, imHeight);
+            validate_point_inside_bounds(points[0], points[1], imWidth, imHeight)
+            validate_point_inside_bounds(points[2], points[3], imWidth, imHeight)
+            validate_point_inside_bounds(points[4], points[5], imWidth, imHeight)
+            validate_point_inside_bounds(points[6], points[7], imWidth, imHeight)
 
     if withConfidence:
         try:
@@ -268,7 +268,7 @@ def validate_clockwise_points(points):
         (point[0][0] - point[3][0]) * (point[0][1] + point[3][1])
     ]
 
-    summatory = edge[0] + edge[1] + edge[2] + edge[3];
+    summatory = edge[0] + edge[1] + edge[2] + edge[3]
     if summatory > 0:
         raise Exception(
             "Points are not clockwise. The coordinates of bounding quadrilaterals have to be given in clockwise order. Regarding the correct interpretation of 'clockwise' remember that the image coordinate system used is the standard one, with the image origin at the upper left, the X axis extending to the right and Y axis extending downwards.")
@@ -387,10 +387,10 @@ def main_validation(default_evaluation_params_fn, validate_data_fn):
             evalParams.update(p['p'] if isinstance(p['p'], dict) else json.loads(p['p'][1:-1]))
 
         validate_data_fn(p['g'], p['s'], evalParams)
-        print
+        print()
         'SUCCESS'
         sys.exit(0)
     except Exception as e:
-        print
+        print()
         str(e)
         sys.exit(101)
