@@ -56,7 +56,7 @@ parser = argparse.ArgumentParser(description='CRAFT reimplementation')
 ''' -- Train Settings -- '''
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from')
-parser.add_argument('--batch_size', default=128, type=int,
+parser.add_argument('--batch_size', default=64, type=int,
                     help='batch size of training')
 # parser.add_argument('--cuda', default=True, type=str2bool,
 # help='Use CUDA to train model')
@@ -68,8 +68,6 @@ parser.add_argument('--weight_decay', default=5e-4, type=float,
                     help='Weight decay for SGD')
 parser.add_argument('--gamma', default=0.1, type=float,
                     help='Gamma update for SGD')
-parser.add_argument('--num_workers', default=8, type=int,
-                    help='Number of workers used in dataloading')
 parser.add_argument('--epochs', default=100, type=int,
                     help='Number of train epochs')
 
@@ -129,8 +127,7 @@ if __name__ == '__main__':
         realdata,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=args.num_workers,
-        # num_workers=0,
+        num_workers=0,
         drop_last=True,
         pin_memory=False
     )
