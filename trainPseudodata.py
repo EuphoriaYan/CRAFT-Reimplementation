@@ -49,7 +49,7 @@ random.seed(42)
 #     def __call__(self, gt):
 #         image_name = gt['imnames'][0]
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 parser = argparse.ArgumentParser(description='CRAFT reimplementation')
 
@@ -129,9 +129,10 @@ if __name__ == '__main__':
         realdata,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=args.num_workers,
+        # num_workers=args.num_workers,
+        num_workers=0,
         drop_last=True,
-        pin_memory=True
+        pin_memory=False
     )
     image_list, _, _ = file_utils.get_files(args.test_folder)
 

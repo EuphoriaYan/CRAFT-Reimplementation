@@ -452,11 +452,11 @@ class ICDAR2013(craft_base_dataset):
     #     return bboxes
 
     def load_image_gt_and_confidencemask(self, index):
-        '''
+        """
         根据索引加载ground truth
         :param index:索引
         :return:bboxes 字符的框，
-        '''
+        """
         imagename = self.images_path[index]
         gt_path = os.path.join(self.gt_folder, "gt_%s.txt" % os.path.splitext(imagename)[0])
         word_bboxes, words = self.load_gt(gt_path)
@@ -697,8 +697,10 @@ class PseudoChinesePage(craft_base_dataset):
         words = []
         for line in lines:
             ori_box = line.strip().split()
-            box = [int(ori_box[j]) for j in range(8)]
-            word = ori_box[9:]
+            box = [int(ori_box[j]) for j in range(4)]
+            box = [box[0], box[1], box[2], box[1], box[2], box[3], box[0], box[3]]
+            word = ori_box[4:]
+            word = [s.strip('\"') for s in word]
             word = ','.join(word)
             box = np.array(box, np.int32).reshape(4, 2)
             if word == '###':
