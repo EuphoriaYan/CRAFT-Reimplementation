@@ -155,16 +155,16 @@ class craft_base_dataset(data.Dataset):
         self.gaussianTransformer = GaussianTransformer(imgSize=1024, region_threshold=0.35, affinity_threshold=0.15)
 
     def load_image_gt_and_confidencemask(self, index):
-        '''
+        """
         根据索引值返回图像、字符框、文字行内容、confidence mask
         :param index:
         :return:
-        '''
+        """
         return None, None, None, None, None
 
     def crop_image_by_bbox(self, image, box):
-        w = (int)(np.linalg.norm(box[0] - box[1]))
-        h = (int)(np.linalg.norm(box[0] - box[3]))
+        w = int(np.linalg.norm(box[0] - box[1]))
+        h = int(np.linalg.norm(box[0] - box[3]))
         width = w
         height = h
         if h > w * 1.5:
@@ -605,6 +605,113 @@ class ICDAR2015(craft_base_dataset):
                 bboxes.append(box)
                 continue
             area, p0, p3, p2, p1, _, _ = mep(box)
+
+            bbox = np.array([p0, p1, p2, p3])
+            distance = 10000000
+            index = 0
+            for i in range(4):
+                d = np.linalg.norm(box[0] - bbox[i])
+                if distance > d:
+                    index = i
+                    distance = d
+            new_box = []
+            for i in range(index, index + 4):
+                new_box.append(bbox[i % 4])
+            new_box = np.array(new_box)
+            bboxes.append(np.array(new_box))
+            words.append(word)
+        return bboxes, words
+
+
+class PseudoChinesePage(craft_base_dataset):
+    def __init__(self, net, PseudoChinesePage_folder, target_size=768, viz=False, debug=False):
+        super(PseudoChinesePage, self).__init__(target_size, viz, debug)
+        self.net = net
+        self.net.eval()
+        self.img_folder = os.path.join(PseudoChinesePage_folder, 'imgs_vertical')
+        self.gt_folder = os.path.join(PseudoChinesePage_folder, 'gt')
+        imagenames = os.listdir(self.img_folder)
+        self.images_path = []
+        for imagename in imagenames:
+            self.images_path.append(imagename)
+
+    def __getitem__(self, index):
+        return self.pull_item(index)
+
+    def __len__(self):
+        return len(self.images_path)
+
+    def get_imagename(self, index):
+        return self.images_path[index]
+
+    # def convert2013(self,box):
+    #     str = box[-1][1:-1]
+    #     bboxes = [box[0], box[1], box[2], box[1],
+    #               box[2], box[3], box[0], box[3],
+    #               str]
+    #     return bboxes
+
+    def load_image_gt_and_confidencemask(self, index):
+        '''
+        根据索引加载ground truth
+        :param index:索引
+        :return:bboxes 字符的框，
+        '''
+        imagename = self.images_path[index]
+        gt_path = os.path.join(self.gt_folder, "gt_%s.txt" % os.path.splitext(imagename)[0])
+        word_bboxes, words = self.load_gt(gt_path)
+        word_bboxes = np.float32(word_bboxes)
+
+        image_path = os.path.join(self.img_folder, imagename)
+        image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        image = random_scale(image, word_bboxes, self.target_size)
+
+        confidence_mask = np.ones((image.shape[0], image.shape[1]), np.float32)
+
+        character_bboxes = []
+        new_words = []
+        confidences = []
+        if len(word_bboxes) > 0:
+            for i in range(len(word_bboxes)):
+                if words[i] == '###' or len(words[i].strip()) == 0:
+                    cv2.fillPoly(confidence_mask, [np.int32(word_bboxes[i])], (0))
+            for i in range(len(word_bboxes)):
+                if words[i] == '###' or len(words[i].strip()) == 0:
+                    continue
+                pursedo_bboxes, bbox_region_scores, confidence = self.inference_pursedo_bboxes(self.net, image,
+                                                                                               word_bboxes[i],
+                                                                                               words[i],
+                                                                                               gt_path,
+                                                                                               viz=self.viz)
+                confidences.append(confidence)
+                cv2.fillPoly(confidence_mask, [np.int32(word_bboxes[i])], (confidence))
+                new_words.append(words[i])
+                character_bboxes.append(pursedo_bboxes)
+        return image, character_bboxes, new_words, confidence_mask, confidences
+
+    def load_gt(self, gt_path):
+        lines = open(gt_path, encoding='utf-8').readlines()
+        bboxes = []
+        words = []
+        for line in lines:
+            ori_box = line.strip().encode('utf-8').decode('utf-8-sig').split(',')
+            box = [int(ori_box[j]) for j in range(8)]
+            word = ori_box[9:]
+            word = ','.join(word)
+            box = np.array(box, np.int32).reshape(4, 2)
+            if word == '###':
+                words.append('###')
+                bboxes.append(box)
+                continue
+            if len(word.strip()) == 0:
+                continue
+
+            try:
+                area, p0, p3, p2, p1, _, _ = mep(box)
+            except Exception as e:
+                print(e, gt_path)
 
             bbox = np.array([p0, p1, p2, p3])
             distance = 10000000
