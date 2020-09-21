@@ -116,6 +116,7 @@ def adjust_learning_rate(optimizer, gamma, step):
 if __name__ == '__main__':
 
     net = CRAFT()
+    print(net, flush=True)
 
     pretrained_path = 'pretrain/craft_mlt_25k.pth'
     net.load_state_dict(copyStateDict(torch.load(pretrained_path)))
