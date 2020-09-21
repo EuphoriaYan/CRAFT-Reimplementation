@@ -49,7 +49,7 @@ random.seed(42)
 #     def __call__(self, gt):
 #         image_name = gt['imnames'][0]
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 parser = argparse.ArgumentParser(description='CRAFT reimplementation')
 
