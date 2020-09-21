@@ -696,7 +696,7 @@ class PseudoChinesePage(craft_base_dataset):
         bboxes = []
         words = []
         for line in lines:
-            ori_box = line.strip().encode('utf-8').decode('utf-8-sig').split(',')
+            ori_box = line.strip().split()
             box = [int(ori_box[j]) for j in range(8)]
             word = ori_box[9:]
             word = ','.join(word)
@@ -725,7 +725,7 @@ class PseudoChinesePage(craft_base_dataset):
             for i in range(index, index + 4):
                 new_box.append(bbox[i % 4])
             new_box = np.array(new_box)
-            bboxes.append(np.array(new_box))
+            bboxes.append(new_box)
             words.append(word)
         return bboxes, words
 
