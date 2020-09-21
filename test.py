@@ -127,7 +127,7 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, o
     return boxes, polys, ret_score_text
 
 
-def test(modelpara):
+def test(modelpara, args):
     # load net
     net = CRAFT()  # initialize
 
@@ -165,4 +165,4 @@ def test(modelpara):
 
 if __name__ == '__main__':
     with torch.no_grad():
-        test(args.trained_model)
+        test(args.trained_model, args)

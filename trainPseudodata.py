@@ -48,6 +48,7 @@ random.seed(42)
 #         image_name = gt['imnames'][0]
 parser = argparse.ArgumentParser(description='CRAFT reimplementation')
 
+''' -- Train Settings -- '''
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from')
 parser.add_argument('--batch_size', default=128, type=int,
@@ -62,8 +63,24 @@ parser.add_argument('--weight_decay', default=5e-4, type=float,
                     help='Weight decay for SGD')
 parser.add_argument('--gamma', default=0.1, type=float,
                     help='Gamma update for SGD')
-parser.add_argument('--num_workers', default=32, type=int,
+parser.add_argument('--num_workers', default=8, type=int,
                     help='Number of workers used in dataloading')
+parser.add_argument('--epochs', default=100, type=int,
+                    help='Number of train epochs')
+
+
+def str2bool(v):
+    return v.lower() in ("yes", "y", "true", "t", "1")
+
+
+''' -- Test Settings -- '''
+parser.add_argument('--test_folder', default='dataset/chinese_books', type=str, help='Path of test pics')
+parser.add_argument('--text_threshold', default=0.7, type=float, help='text confidence threshold')
+parser.add_argument('--low_text', default=0.4, type=float, help='text low-bound score')
+parser.add_argument('--link_threshold', default=0.4, type=float, help='link confidence threshold')
+parser.add_argument('--cuda', default=True, type=str2bool, help='Use cuda to train model')
+parser.add_argument('--ocr_type', choices=['normal', 'single_char', 'force_colume'], default='normal', help='ocr_type')
+parser.add_argument('--poly', default=False, action='store_true', help='enable polygon type')
 
 args = parser.parse_args()
 
@@ -87,6 +104,7 @@ def adjust_learning_rate(optimizer, gamma, step):
     # https://github.com/pytorch/examples/blob/master/imagenet/main.py
     """
     lr = args.lr * (0.8 ** step)
+    lr = max(lr, args.lr / 10)
     print(lr)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
@@ -106,11 +124,12 @@ if __name__ == '__main__':
     realdata = PseudoChinesePage(net, 'dataset/book_pages', target_size=768)
     real_data_loader = torch.utils.data.DataLoader(
         realdata,
-        batch_size=10,
+        batch_size=args.batch_size,
         shuffle=True,
-        num_workers=0,
+        num_workers=args.num_workers,
         drop_last=True,
-        pin_memory=True)
+        pin_memory=True
+    )
 
     optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     criterion = Maploss()
@@ -121,7 +140,7 @@ if __name__ == '__main__':
     loss_time = 0
     loss_value = 0
     compare_loss = 1
-    for epoch in range(1000):
+    for epoch in range(args.epochs):
         train_time_st = time.time()
         loss_value = 0
         if epoch % 50 == 0 and epoch != 0:
@@ -129,13 +148,8 @@ if __name__ == '__main__':
             adjust_learning_rate(optimizer, args.gamma, step_index)
 
         st = time.time()
-        for index, (real_images, real_gh_label, real_gah_label, real_mask, _) in enumerate(real_data_loader):
+        for index, (images, gh_label, gah_label, mask, _) in enumerate(real_data_loader):
             # real_images, real_gh_label, real_gah_label, real_mask = next(batch_real)
-            syn_images, syn_gh_label, syn_gah_label, syn_mask, __ = next(batch_syn)
-            images = torch.cat((syn_images, real_images), 0)
-            gh_label = torch.cat((syn_gh_label, real_gh_label), 0)
-            gah_label = torch.cat((syn_gah_label, real_gah_label), 0)
-            mask = torch.cat((syn_mask, real_mask), 0)
             # affinity_mask = torch.cat((syn_mask, real_affinity_mask), 0)
 
             images = Variable(images.float()).cuda()
@@ -163,8 +177,7 @@ if __name__ == '__main__':
                     index,
                     len(real_data_loader),
                     et - st,
-                    loss_value / 2
-                )
+                    loss_value / 2)
                 )
                 loss_time = 0
                 loss_value = 0
@@ -176,8 +189,7 @@ if __name__ == '__main__':
             #                '/data/CRAFT-pytorch/real_weights/lower_loss.pth')
 
         print('Saving state, iter:', epoch)
-        torch.save(net.module.state_dict(),
-                   '/data/CRAFT-pytorch/real_weights/CRAFT_clr_' + repr(epoch) + '.pth')
-        test('/data/CRAFT-pytorch/real_weights/CRAFT_clr_' + repr(epoch) + '.pth')
+        torch.save(net.module.state_dict(), 'weights/CRAFT_clr_' + repr(epoch) + '.pth')
+        test('weights/CRAFT_clr_' + repr(epoch) + '.pth', args)
         # test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
         getresult()
