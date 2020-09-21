@@ -14,10 +14,9 @@ import torch.optim as optim
 import random
 import h5py
 import re
-# import water
 import file_utils
 import imgproc
-from test import test, test_net
+from test import test_net
 
 from math import exp
 from data_loader import ICDAR2015, Synth80k, ICDAR2013, PseudoChinesePage
