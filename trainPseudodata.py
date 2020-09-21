@@ -14,9 +14,10 @@ import torch.optim as optim
 import random
 import h5py
 import re
+
+import craft_utils
 import file_utils
 import imgproc
-from test import test_net
 
 from math import exp
 from data_loader import ICDAR2015, Synth80k, ICDAR2013, PseudoChinesePage
@@ -108,6 +109,62 @@ def adjust_learning_rate(optimizer, gamma, step):
     print(lr)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+
+
+def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, ocr_type):
+    t0 = time.time()
+
+    # resize
+    img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(image, args.canvas_size,
+                                                                          interpolation=cv2.INTER_LINEAR,
+                                                                          mag_ratio=args.mag_ratio)
+    ratio_h = ratio_w = 1 / target_ratio
+
+    # preprocessing
+    x = imgproc.normalizeMeanVariance(img_resized)
+    x = torch.from_numpy(x).permute(2, 0, 1)  # [h, w, c] to [c, h, w]
+    x = x.unsqueeze(0)  # [c, h, w] to [b, c, h, w]
+    if cuda:
+        x = x.cuda()
+
+    # forward pass
+    y, _ = net(x)
+
+    # make score and link map
+    score_text = y[0, :, :, 0].cpu().detach().numpy()
+    score_link = y[0, :, :, 1].cpu().detach().numpy()
+
+    t0 = time.time() - t0
+    t1 = time.time()
+
+    # Post-processing
+    boxes, polys = craft_utils.getDetBoxes(
+        score_text, score_link,
+        text_threshold, link_threshold,
+        low_text, poly, ocr_type
+    )
+
+    # coordinate adjustment
+    boxes = craft_utils.adjustResultCoordinates(boxes, ratio_w, ratio_h)
+    polys = craft_utils.adjustResultCoordinates(polys, ratio_w, ratio_h)
+
+    if ocr_type == 'single_char':
+        boxes = craft_utils.cluster_sort(boxes)
+
+    for k in range(len(polys)):
+        if polys[k] is None:
+            polys[k] = boxes[k]
+
+    t1 = time.time() - t1
+
+    # render results (optional)
+    render_img = score_text.copy()
+    render_img = np.hstack((render_img, score_link))
+    ret_score_text = imgproc.cvt2HeatmapImg(render_img)
+
+    if args.show_time: print("\ninfer/postproc time : {:.3f}/{:.3f}".format(t0, t1))
+
+    return boxes, polys, ret_score_text
 
 
 if __name__ == '__main__':
