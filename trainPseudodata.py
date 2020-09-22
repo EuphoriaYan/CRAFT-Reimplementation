@@ -236,7 +236,7 @@ if __name__ == '__main__':
             loss_value += loss.item()
             if index % 2 == 0 and index > 0:
                 et = time.time()
-                print('epoch {}:({}/{}) batch || training time for 2 batch {} || training loss {} ||'.format(
+                print('epoch {}:({}/{}) batch || training time for 2 batch {:.4f} || training loss {:.6f} ||'.format(
                     epoch,
                     index,
                     len(real_data_loader),
