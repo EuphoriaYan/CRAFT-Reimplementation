@@ -267,7 +267,7 @@ if __name__ == '__main__':
             # mask_file = result_folder + "/res_" + filename + '_mask.jpg'
             # cv2.imwrite(mask_file, score_text)
 
-            file_utils.saveResult(image_path, image[:, :, ::-1], polys, dirname='weights/' + repr(epoch))
+            file_utils.saveResult(image_path, image[:, :, ::-1], polys, dirname='weights/' + repr(epoch) + '/')
         # test('weights/CRAFT_clr_' + repr(epoch) + '.pth')
         # test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
         # getresult()
