@@ -204,6 +204,7 @@ if __name__ == '__main__':
     loss_time = 0
     loss_value = 0
     compare_loss = 1
+    batch_len = len(real_data_loader)
     for epoch in range(args.epochs):
         train_time_st = time.time()
         loss_value = 0
@@ -236,10 +237,10 @@ if __name__ == '__main__':
             loss_value += loss.item()
             if index % 2 == 0 and index > 0:
                 et = time.time()
-                print('epoch {}:({}/{}) batch || training time for 2 batch {:.4f} || training loss {:.6f} ||'.format(
+                print('epoch {:3d}:({:3d}/{:3d}) batch || training time for 2 batch {:.4f} || training loss {:.6f} ||'.format(
                     epoch,
                     index,
-                    len(real_data_loader),
+                    batch_len,
                     et - st,
                     loss_value / 2)
                 )
