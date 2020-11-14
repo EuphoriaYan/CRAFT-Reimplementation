@@ -316,7 +316,7 @@ def main_evaluation(p, default_evaluation_params_fn, validate_data_fn, evaluate_
     evaluate_method_fn: points to a function that evaluated the submission and return a Dictionary with the results
     """
 
-    if (p == None):
+    if p == None:
         p = dict([s[1:].split('=') for s in sys.argv[1:]])
         if (len(sys.argv) < 3):
             print_help()

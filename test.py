@@ -138,7 +138,7 @@ def test(modelpara):
         net.load_state_dict(copyStateDict(torch.load(modelpara, map_location='cpu')))
 
     if args.cuda:
-        net = torch.nn.DataParallel(net, device_ids=[1])
+        net = torch.nn.DataParallel(net, device_ids=[0])
         cudnn.benchmark = False
 
     net.eval()
@@ -149,6 +149,7 @@ def test(modelpara):
     for k, image_path in enumerate(image_list):
         print("Test image {:d}/{:d}: {:s}".format(k + 1, len(image_list), image_path), end='\r')
         image = imgproc.loadImage(image_path)
+        # image = image.transpose(1, 0, 2)
 
         bboxes, polys, score_text = test_net(net, image, args.text_threshold, args.link_threshold, args.low_text,
                                              args.cuda, args.poly, args.ocr_type)
