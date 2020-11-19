@@ -4,8 +4,7 @@ import torch.nn as nn
 
 
 class Maploss(nn.Module):
-    def __init__(self, use_gpu=True):
-
+    def __init__(self):
         super(Maploss, self).__init__()
 
     def single_image_loss(self, pre_loss, loss_label):

@@ -15,15 +15,17 @@ import random
 import h5py
 import re
 
+'''
 import craft_utils
 import file_utils
 import imgproc
-
+'''
 from math import exp
 from data_loader import ICDAR2015, Synth80k, ICDAR2013, PseudoChinesePage
 
-'''
+
 ###import file#######
+'''
 from augmentation import random_rot, crop_img_bboxes
 from gaussianmap import gaussion_transform, four_point_transform
 from generateheatmap import add_character, generate_target, add_affinity, generate_affinity, sort_box, real_affinity, \
@@ -48,7 +50,6 @@ random.seed(42)
 #         pass
 #     def __call__(self, gt):
 #         image_name = gt['imnames'][0]
-
 parser = argparse.ArgumentParser(description='CRAFT reimplementation')
 
 ''' -- Train Settings -- '''
@@ -113,7 +114,7 @@ def adjust_learning_rate(optimizer, gamma, step):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
-
+'''
 def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, ocr_type):
     t0 = time.time()
 
@@ -168,7 +169,7 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, o
     if args.show_time: print("\ninfer/postproc time : {:.3f}/{:.3f}".format(t0, t1))
 
     return boxes, polys, ret_score_text
-
+'''
 
 if __name__ == '__main__':
 
@@ -193,7 +194,7 @@ if __name__ == '__main__':
         drop_last=True,
         pin_memory=True
     )
-    image_list, _, _ = file_utils.get_files(args.test_folder)
+    # image_list, _, _ = file_utils.get_files(args.test_folder)
 
     optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     criterion = Maploss()
@@ -256,6 +257,7 @@ if __name__ == '__main__':
         print('Saving state, iter:', epoch)
         torch.save(net.module.state_dict(), 'weights/CRAFT_clr_' + repr(epoch) + '.pth')
 
+        '''
         for k, image_path in enumerate(image_list):
             print("Test image {:d}/{:d}: {:s}".format(k + 1, len(image_list), image_path), end='\r')
             image = imgproc.loadImage(image_path)
@@ -268,6 +270,7 @@ if __name__ == '__main__':
             # cv2.imwrite(mask_file, score_text)
 
             file_utils.saveResult(image_path, image[:, :, ::-1], polys, dirname='weights/' + repr(epoch) + '/')
+        '''
         # test('weights/CRAFT_clr_' + repr(epoch) + '.pth')
         # test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
         # getresult()
