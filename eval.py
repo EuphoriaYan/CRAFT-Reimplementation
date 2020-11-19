@@ -475,8 +475,7 @@ def test(args):
 
             for gtNum in range(len(gtPols)):
                 for detNum in range(len(detPols)):
-                    if gtRectMat[gtNum] == 0 \
-                            and detRectMat[detNum] == 0:
+                    if gtRectMat[gtNum] == 0 and detRectMat[detNum] == 0:
                         if iouMat[gtNum, detNum] > args.iou_constraint:
                             gtRectMat[gtNum] = 1
                             detRectMat[detNum] = 1
@@ -488,7 +487,6 @@ def test(args):
             if numGtCare == 0:
                 recall = float(1)
                 precision = float(0) if numDetCare > 0 else float(1)
-                sampleAP = precision
             else:
                 recall = float(detMatched) / numGtCare
                 precision = 0 if numDetCare == 0 else float(detMatched) / numDetCare
@@ -516,7 +514,7 @@ def test(args):
 
     methodMetrics = {'precision': methodPrecision, 'recall': methodRecall, 'hmean': methodHmean}
 
-    resDict = {'calculated': True, 'Message': '', 'method': methodMetrics, 'per_sample': perSampleMetrics}
+    resDict = {'calculated': True, 'method': methodMetrics, 'per_sample': perSampleMetrics}
 
     print("elapsed time : {}s".format(time.time() - t))
 
