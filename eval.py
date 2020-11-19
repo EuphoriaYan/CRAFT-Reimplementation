@@ -333,7 +333,7 @@ def parse_args():
     # input
     parser.add_argument('--input_path', type=str, required=True)
     # Threshold
-    parser.add_argument('--iou_constraint', default=0.7, type=float)
+    parser.add_argument('--iou_constraint', default=0.5, type=float)
     parser.add_argument('--per_sample', action='store_true')
     args = parser.parse_args()
     return args
@@ -444,8 +444,6 @@ def test(args):
 
         pairs = []
 
-        sampleAP = 0
-
         gtPols = []
         gt_bboxes = read_gt(gt_path, args.ext)
         for bbox in gt_bboxes:
@@ -458,8 +456,9 @@ def test(args):
             net, image, args.text_threshold, args.link_threshold, args.low_text, args.cuda, args.poly, args.ocr_type
         )
         for bbox in det_bboxes:
-            bbox = np.array(bbox).flatten()
-            detPol = polygon_from_points(bbox)
+            bbox = (bbox[0][0], bbox[0][1], bbox[1][0], bbox[2][1])
+            delRect = Rectangle(*bbox)
+            detPol = rectangle_to_polygon(delRect)
             detPols.append(detPol)
 
         if len(gtPols) > 0 and len(detPols) > 0:
@@ -506,19 +505,16 @@ def test(args):
                     'recall': recall,
                     'hmean': hmean,
                     'pairs': pairs,
-                    'AP': sampleAP,
-                    'iouMat': [] if len(detPols) > 100 else iouMat.tolist(),
+                    # 'iouMat': [] if len(detPols) > 100 else iouMat.tolist(),
                 }
 
     # Compute MAP and MAR
-    AP = 0
-
     methodRecall = 0 if numGlobalCareGt == 0 else float(matchedSum) / numGlobalCareGt
     methodPrecision = 0 if numGlobalCareDet == 0 else float(matchedSum) / numGlobalCareDet
     methodHmean = 0 if methodRecall + methodPrecision == 0 else 2 * methodRecall * methodPrecision / (
             methodRecall + methodPrecision)
 
-    methodMetrics = {'precision': methodPrecision, 'recall': methodRecall, 'hmean': methodHmean, 'AP': AP}
+    methodMetrics = {'precision': methodPrecision, 'recall': methodRecall, 'hmean': methodHmean}
 
     resDict = {'calculated': True, 'Message': '', 'method': methodMetrics, 'per_sample': perSampleMetrics}
 
