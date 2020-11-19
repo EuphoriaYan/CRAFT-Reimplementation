@@ -318,7 +318,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     # Model Architecture
-    parser.add_argument('--ocr_type', choices=['normal', 'single_char', 'force_colume'], default='normal',
+    parser.add_argument('--ocr_type', choices=['normal', 'single_char', 'force_column'], default='normal',
                         help='ocr_type')
     parser.add_argument('--trained_model', default='weights/craft_mlt_25k.pth', type=str, help='pretrained model')
     parser.add_argument('--text_threshold', default=0.7, type=float, help='text confidence threshold')
@@ -442,32 +442,25 @@ def test(args):
 
         detMatched = 0
 
-        iouMat = np.empty([1, 1])
-
         pairs = []
-        detMatchedNums = []
 
         sampleAP = 0
 
         gtPols = []
-        gtPolPoints = []
         gt_bboxes = read_gt(gt_path, args.ext)
         for bbox in gt_bboxes:
             gtRect = Rectangle(*bbox)
             gtPol = rectangle_to_polygon(gtRect)
             gtPols.append(gtPol)
-            gtPolPoints.append(bbox)
 
         detPols = []
-        detPolPoints = []
         det_bboxes, polys, score_text = test_net(
             net, image, args.text_threshold, args.link_threshold, args.low_text, args.cuda, args.poly, args.ocr_type
         )
         for bbox in det_bboxes:
-            detRect = Rectangle(*bbox)
-            detPol = rectangle_to_polygon(detRect)
+            bbox = np.array(bbox).flatten()
+            detPol = polygon_from_points(bbox)
             detPols.append(detPol)
-            detPolPoints.append(bbox)
 
         if len(gtPols) > 0 and len(detPols) > 0:
             # Calculate IoU and precision matrixs
@@ -515,8 +508,6 @@ def test(args):
                     'pairs': pairs,
                     'AP': sampleAP,
                     'iouMat': [] if len(detPols) > 100 else iouMat.tolist(),
-                    'gtPolPoints': gtPolPoints,
-                    'detPolPoints': detPolPoints,
                 }
 
     # Compute MAP and MAR
