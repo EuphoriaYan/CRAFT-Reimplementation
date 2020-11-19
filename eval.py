@@ -23,7 +23,22 @@ from craft import CRAFT
 from collections import OrderedDict
 from eval.script import *
 
-Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
+# Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
+
+
+class Rectangle:
+    def __init__(self, xmin, ymin, xmax, ymax):
+        self.xmin = xmin
+        self.ymin = ymin
+        self.xmax = xmax
+        self.ymax = ymax
+
+    def area(self):
+        if self.xmax - self.xmin <= 0:
+            return 0
+        if self.ymax - self.ymin <= 0:
+            return 0
+        return (self.xmax - self.xmin) * (self.ymax - self.ymin)
 
 
 def copyStateDict(state_dict):
@@ -81,17 +96,12 @@ def rectangle_to_points(rect):
     return points
 
 
-def get_union(pD, pG):
-    areaA = pD.area()
-    areaB = pG.area()
-    return areaA + areaB - get_intersection(pD, pG)
-
-
 def get_intersection_over_union(pD, pG):
-    try:
-        return get_intersection(pD, pG) / get_union(pD, pG)
-    except:
+    intersection = get_intersection(pD, pG)
+    if intersection == 0.0:
         return 0
+    else:
+        return intersection / (pD.area() + pG.area() - intersection)
 
 
 def get_intersection(pD, pG):
@@ -99,6 +109,19 @@ def get_intersection(pD, pG):
     if len(pInt) == 0:
         return 0
     return pInt.area()
+
+
+def get_intersection_over_union_rec(pD, pG):
+    intersection = get_intersection_rec(pD, pG)
+    if intersection == 0:
+        return 0
+    else:
+        return intersection / (pD.area() + pG.area() - intersection)
+
+
+def get_intersection_rec(pD, pG):
+    IntRec = Rectangle(max(pD.xmin, pG.xmin), max(pD.ymin, pG.ymin), min(pD.xmax, pG.xmax), min(pD.ymax, pG.ymax))
+    return IntRec.area()
 
 
 def compute_ap(confList, matchList, numGtCare):
@@ -385,7 +408,6 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, o
     render_img = np.hstack((render_img, score_link))
     ret_score_text = imgproc.cvt2HeatmapImg(render_img)
 
-
     return boxes, polys, ret_score_text
 
 
@@ -444,24 +466,35 @@ def test(args):
 
         pairs = []
 
-        gtPols = []
+        # gtPols = []
+        gtRects = []
         gt_bboxes = read_gt(gt_path, args.ext)
         for bbox in gt_bboxes:
             gtRect = Rectangle(*bbox)
-            gtPol = rectangle_to_polygon(gtRect)
-            gtPols.append(gtPol)
+            # gtPol = rectangle_to_polygon(gtRect)
+            # gtPols.append(gtPol)
+            gtRects.append(gtRect)
 
-        detPols = []
+        # detPols = []
+        detRects = []
         det_bboxes, polys, score_text = test_net(
             net, image, args.text_threshold, args.link_threshold, args.low_text, args.cuda, args.poly, args.ocr_type
         )
         for bbox in det_bboxes:
+            '''
             bbox = (bbox[0][0], bbox[0][1], bbox[1][0], bbox[2][1])
             delRect = Rectangle(*bbox)
             detPol = rectangle_to_polygon(delRect)
-            detPols.append(detPol)
+            '''
+            bbox = (min(bbox[:, 0]), min(bbox[:, 1]), max(bbox[:, 0]), max(bbox[:, 1]))
+            # detPol = plg.Polygon(bbox)
+            # detPols.append(detPol)
+            detRect = Rectangle(*bbox)
+            detRects.append(detRect)
 
-        if len(gtPols) > 0 and len(detPols) > 0:
+        # if len(gtPols) > 0 and len(detPols) > 0:
+        if len(gtRects) > 0 and len(detRects) > 0:
+            '''
             # Calculate IoU and precision matrixs
             outputShape = [len(gtPols), len(detPols)]
             iouMat = np.empty(outputShape)
@@ -484,6 +517,29 @@ def test(args):
 
             numGtCare = len(gtPols)
             numDetCare = len(detPols)
+            '''
+            # Calculate IoU and precision matrixs
+            outputShape = [len(gtRects), len(detRects)]
+            iouMat = np.empty(outputShape)
+            gtRectMat = np.zeros(len(gtRects), np.int8)
+            detRectMat = np.zeros(len(detRects), np.int8)
+            for gtNum in range(len(gtRects)):
+                for detNum in range(len(detRects)):
+                    pG = gtRects[gtNum]
+                    pD = detRects[detNum]
+                    iouMat[gtNum, detNum] = get_intersection_over_union_rec(pD, pG)
+
+            for gtNum in range(len(gtRects)):
+                for detNum in range(len(detRects)):
+                    if gtRectMat[gtNum] == 0 and detRectMat[detNum] == 0:
+                        if iouMat[gtNum, detNum] > args.iou_constraint:
+                            gtRectMat[gtNum] = 1
+                            detRectMat[detNum] = 1
+                            detMatched += 1
+                            pairs.append({'gt': gtNum, 'det': detNum})
+
+            numGtCare = len(gtRects)
+            numDetCare = len(detRects)
             if numGtCare == 0:
                 recall = float(1)
                 precision = float(0) if numDetCare > 0 else float(1)
