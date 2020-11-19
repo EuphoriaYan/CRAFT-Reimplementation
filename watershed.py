@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import math
 import Polygon as plg
+from PIL import Image, ImageDraw
 
 
 def watershed1(image, viz=False):
@@ -10,13 +11,17 @@ def watershed1(image, viz=False):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     else:
         gray = image
+    '''
     if viz:
         cv2.imshow("gray", gray)
         cv2.waitKey()
+    '''
     ret, binary = cv2.threshold(gray, 0.6 * np.max(gray), 255, cv2.THRESH_BINARY)
+    '''
     if viz:
         cv2.imshow("binary", binary)
         cv2.waitKey()
+    '''
     # 形态学操作，进一步消除图像中噪点
     kernel = np.ones((3, 3), np.uint8)
     # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
@@ -43,13 +48,13 @@ def watershed1(image, viz=False):
     # 分水岭变换
     markers = markers + 1
     markers[unknown == 255] = 0
-
+    '''
     if viz:
         color_markers = np.uint8(markers)
         color_markers = cv2.applyColorMap(color_markers, cv2.COLORMAP_JET)
         cv2.imshow("color_markers", color_markers)
         cv2.waitKey()
-
+    '''
     markers = cv2.watershed(image, markers=markers)
     image[markers == -1] = [0, 0, 255]
     if viz:
@@ -142,6 +147,17 @@ def watershed2(image, viz=False):
     return np.array(boxes)
 
 
+def inverse_color(image):
+
+    height,width = image.shape
+    img2 = image.copy()
+
+    for i in range(height):
+        for j in range(width):
+            img2[i,j] = (255-image[i,j])
+    return img2
+
+
 def watershed(oriimage, image, viz=False):
     # viz = True
     boxes = []
@@ -149,22 +165,18 @@ def watershed(oriimage, image, viz=False):
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     else:
         gray = image
-    if viz:
-        cv2.imshow("gray", gray)
-        cv2.waitKey()
     ret, binary = cv2.threshold(gray, 0.2 * np.max(gray), 255, cv2.THRESH_BINARY)
-    if viz:
-        cv2.imshow("binary", binary)
-        cv2.waitKey()
     # 形态学操作，进一步消除图像中噪点
     kernel = np.ones((3, 3), np.uint8)
     # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     mb = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=2)  # iterations连续两次开操作
     sure_bg = cv2.dilate(mb, kernel, iterations=3)  # 3次膨胀,可以获取到大部分都是背景的区域
     sure_bg = mb
+    '''
     if viz:
-        cv2.imshow("sure_bg", mb)
+        cv2.imshow("sure_bg", sure_bg)
         cv2.waitKey()
+    '''
     # 距离变换
     # dist = cv2.distanceTransform(mb, cv2.DIST_L2, 5)
     # if viz:
@@ -172,20 +184,27 @@ def watershed(oriimage, image, viz=False):
     #     cv2.waitKey()
     ret, sure_fg = cv2.threshold(gray, 0.6 * gray.max(), 255, cv2.THRESH_BINARY)
     surface_fg = np.uint8(sure_fg)  # 保持色彩空间一致才能进行运算，现在是背景空间为整型空间，前景为浮点型空间，所以进行转换
+
     if viz:
         cv2.imshow("surface_fg", surface_fg)
         cv2.waitKey()
+
     unknown = cv2.subtract(sure_bg, surface_fg)
     # 获取maskers,在markers中含有种子区域
     ret, markers = cv2.connectedComponents(surface_fg)
 
-    nLabels, labels, stats, centroids = cv2.connectedComponentsWithStats(surface_fg,
-                                                                         connectivity=4)
+    '''
+    nLabels, labels, stats, centroids = cv2.connectedComponentsWithStats(surface_fg, connectivity=4)
+    '''
+
     # 分水岭变换
-    markers = labels.copy() + 1
+    # markers = labels.copy() + 1
+    markers = markers.copy() + 1
     # markers = markers+1
     markers[unknown == 255] = 0
+    markers = np.uint8(markers)
 
+    '''
     if viz:
         color_markers = np.uint8(markers)
         color_markers = color_markers / (color_markers.max() / 255)
@@ -193,6 +212,7 @@ def watershed(oriimage, image, viz=False):
         color_markers = cv2.applyColorMap(color_markers, cv2.COLORMAP_JET)
         cv2.imshow("color_markers", color_markers)
         cv2.waitKey()
+    '''
     # a = cv2.applyColorMap(gray, cv2.COLORMAP_JET)
     markers = cv2.watershed(oriimage, markers=markers)
     oriimage[markers == -1] = [0, 0, 255]
@@ -241,7 +261,26 @@ def watershed(oriimage, image, viz=False):
     return np.array(boxes)
 
 
+def convert_box_to_twopoint(box):
+    left = min([point[0] for point in box])
+    right = max([point[0] for point in box])
+    top = min([point[1] for point in box])
+    bottom = max([point[1] for point in box])
+    return (left, top, right, bottom)
+
+
 if __name__ == '__main__':
-    image = cv2.imread('images/standard.jpg', cv2.IMREAD_COLOR)
-    boxes = watershed(image, True)
+    img_path = 'dataset/chinese_books/010576a.jpg'
+    image = cv2.imread(img_path, cv2.IMREAD_COLOR)
+    if len(image.shape) == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    image = inverse_color(image)
+    # boxes = watershed1(image, True)
+    boxes = watershed(image, image, True)
+    img = Image.open(img_path).convert('RGB')
+    draw = ImageDraw.Draw(img)
+    for box in boxes:
+        draw.rectangle(convert_box_to_twopoint(box), outline=(255,0,0), width=3)
+    img.show()
     print(boxes)
+    print(boxes.shape)

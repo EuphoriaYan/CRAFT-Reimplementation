@@ -358,7 +358,7 @@ def getresult():
     eval_2015('/data/CRAFT-pytorch/result')
 
 
-def evaluate_method(gtFilePath, submFilePath, evaluationParams):
+def custom_evaluate_method(gtFilePath, submFilePath, evaluationParams):
     """
     Method evaluate_method: evaluate method and returns the results
         Results. Dictionary with the following values:
