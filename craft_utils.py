@@ -269,7 +269,6 @@ def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly
 
 
 def adjustColumeBoxes(boxes: List, row_threshold=0.67, col_threshold=1.35, union_threshold=0.8):
-
     def cal_IoU(array1, array2):
         array1_l = array1[0, 0]
         array1_r = array1[1, 0]

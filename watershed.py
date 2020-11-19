@@ -148,13 +148,12 @@ def watershed2(image, viz=False):
 
 
 def inverse_color(image):
-
-    height,width = image.shape
+    height, width = image.shape
     img2 = image.copy()
 
     for i in range(height):
         for j in range(width):
-            img2[i,j] = (255-image[i,j])
+            img2[i, j] = (255 - image[i, j])
     return img2
 
 
@@ -280,7 +279,7 @@ if __name__ == '__main__':
     img = Image.open(img_path).convert('RGB')
     draw = ImageDraw.Draw(img)
     for box in boxes:
-        draw.rectangle(convert_box_to_twopoint(box), outline=(255,0,0), width=3)
+        draw.rectangle(convert_box_to_twopoint(box), outline=(255, 0, 0), width=3)
     img.show()
     print(boxes)
     print(boxes.shape)

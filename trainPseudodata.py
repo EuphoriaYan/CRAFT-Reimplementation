@@ -23,7 +23,6 @@ import imgproc
 from math import exp
 from data_loader import ICDAR2015, Synth80k, ICDAR2013, PseudoChinesePage
 
-
 ###import file#######
 '''
 from augmentation import random_rot, crop_img_bboxes
@@ -113,6 +112,7 @@ def adjust_learning_rate(optimizer, gamma, step):
     print(lr)
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+
 
 '''
 def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, ocr_type):
@@ -238,12 +238,13 @@ if __name__ == '__main__':
             loss_value += loss.item()
             if index % 2 == 0 and index > 0:
                 et = time.time()
-                print('epoch {:3d}:({:3d}/{:3d}) batch || training time for 2 batch {:.4f} || training loss {:.6f} ||'.format(
-                    epoch,
-                    index,
-                    batch_len,
-                    et - st,
-                    loss_value / 2)
+                print(
+                    'epoch {:3d}:({:3d}/{:3d}) batch || training time for 2 batch {:.4f} || training loss {:.6f} ||'.format(
+                        epoch,
+                        index,
+                        batch_len,
+                        et - st,
+                        loss_value / 2)
                 )
                 loss_time = 0
                 loss_value = 0

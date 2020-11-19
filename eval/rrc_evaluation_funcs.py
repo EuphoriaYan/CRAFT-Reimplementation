@@ -76,7 +76,7 @@ def load_zip_file(file, fileNameRegExp='', allEntries=False):
         else:
             if allEntries:
                 pass
-                #raise Exception('ZIP entry not valid: %s' % name)
+                # raise Exception('ZIP entry not valid: %s' % name)
 
     return dict(pairs)
 
@@ -288,9 +288,10 @@ def get_tl_line_values_from_file_contents(content, CRLF=True, LTRB=True, withTra
     lines = content.split("\r\n" if CRLF else "\n")
     for line in lines:
         line = line.replace("\r", "").replace("\n", "")
-        if (line != ""):
-            points, confidence, transcription = get_tl_line_values(line, LTRB, withTranscription, withConfidence,
-                                                                   imWidth, imHeight);
+        if line != "":
+            points, confidence, transcription = get_tl_line_values(
+                line, LTRB, withTranscription, withConfidence, imWidth, imHeight
+            )
             pointsList.append(points)
             transcriptionsList.append(transcription)
             confidencesList.append(confidence)

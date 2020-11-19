@@ -47,7 +47,7 @@ def str2bool(v):
 
 
 parser = argparse.ArgumentParser(description='CRAFT Text Detection')
-parser.add_argument('--ocr_type', choices=['normal', 'single_char','force_colume'], default='normal', help='ocr_type')
+parser.add_argument('--ocr_type', choices=['normal', 'single_char', 'force_colume'], default='normal', help='ocr_type')
 parser.add_argument('--trained_model', default='weights/craft_mlt_25k.pth', type=str, help='pretrained model')
 parser.add_argument('--text_threshold', default=0.7, type=float, help='text confidence threshold')
 parser.add_argument('--low_text', default=0.4, type=float, help='text low-bound score')
@@ -61,7 +61,6 @@ parser.add_argument('--test_folder', default='dataset', type=str, help='folder p
 parser.add_argument('--res_folder', default='output', type=str, help='folder path to output results')
 
 args = parser.parse_args()
-
 
 """ For test images in a folder """
 image_list, _, _ = file_utils.get_files(args.test_folder)
