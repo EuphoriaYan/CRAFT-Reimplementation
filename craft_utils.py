@@ -38,7 +38,7 @@ def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text,
     ret, text_score = cv2.threshold(textmap, low_text, 1, 0)
     ret, link_score = cv2.threshold(linkmap, link_threshold, 1, 0)
 
-    if ocr_type == 'force_colume' or ocr_type == 'single_char':
+    if ocr_type == 'force_column' or ocr_type == 'single_char':
         text_score_comb = text_score.copy()
     else:
         text_score_comb = np.clip(text_score + link_score, 0, 1)
@@ -261,7 +261,7 @@ def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly
         polys = getPoly_core(boxes, labels, mapper, linkmap)
     else:
         # convert single char box to colume box
-        if ocr_type == 'force_colume':
+        if ocr_type == 'force_column':
             boxes = adjustColumeBoxes(boxes)
         polys = [None] * len(boxes)
 

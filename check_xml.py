@@ -76,11 +76,13 @@ if __name__ == '__main__':
         json_file = args.input_json
         json_data = json.load(open(json_file, 'r', encoding='utf-8'))
         regions = json_data['regions']
-        for region in regions:
+        for idx, region in enumerate(regions):
             bbox = region['boundingBox']
             bbox = (bbox['left'], bbox['top'], bbox['left']+bbox['width'], bbox['top']+bbox['height'])
             draw.rectangle(bbox, outline=(255,0,0), width=3)
+            draw.text((bbox[0]+5,bbox[1]+5), str(idx), fill=(0,0,255))
         img.show()
+        # img.save('output/gt_000002.jpg')
     if args.input_xml is not None:
         xml_file = args.input_xml
         xml_parser = xml.sax.make_parser()
