@@ -363,7 +363,6 @@ def parse_args():
 
 
 def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, ocr_type):
-    t0 = time.time()
 
     # resize
     img_resized, target_ratio, size_heatmap = imgproc.resize_aspect_ratio(image, args.canvas_size,
@@ -459,7 +458,7 @@ def test(args):
 
     # load data
     for k, (image_path, gt_path) in enumerate(zip(image_list, gt_list)):
-        print("Test image {:d}/{:d}: {:s}".format(k + 1, len(image_list), image_path), end='\r')
+        print("Test image {:d}/{:d}: {:s}".format(k + 1, len(image_list), image_path))
         image = imgproc.loadImage(image_path)
 
         detMatched = 0
