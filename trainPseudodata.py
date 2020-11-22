@@ -1,5 +1,7 @@
+
 import os
 import sys
+
 import torch
 import torch.utils.data as data
 import cv2
@@ -14,14 +16,14 @@ import torch.optim as optim
 import random
 import h5py
 import re
+from math import exp
 
-'''
 import craft_utils
 import file_utils
 import imgproc
-'''
-from math import exp
+
 from data_loader import ICDAR2015, Synth80k, ICDAR2013, PseudoChinesePage
+from test import test_net
 
 ###import file#######
 '''
@@ -30,6 +32,7 @@ from gaussianmap import gaussion_transform, four_point_transform
 from generateheatmap import add_character, generate_target, add_affinity, generate_affinity, sort_box, real_affinity, \
     generate_affinity_box
 '''
+
 from mseloss import Maploss
 
 from collections import OrderedDict
@@ -87,6 +90,9 @@ parser.add_argument('--mag_ratio', default=2, type=float, help='image magnificat
 parser.add_argument('--show_time', default=False, action='store_true', help='show processing time')
 
 args = parser.parse_args()
+
+""" For test images in a folder """
+image_list, _, _ = file_utils.get_files(args.test_folder)
 
 
 def copyStateDict(state_dict):
@@ -258,7 +264,6 @@ if __name__ == '__main__':
         print('Saving state, iter:', epoch)
         torch.save(net.module.state_dict(), 'weights/CRAFT_clr_' + repr(epoch) + '.pth')
 
-        '''
         for k, image_path in enumerate(image_list):
             print("Test image {:d}/{:d}: {:s}".format(k + 1, len(image_list), image_path), end='\r')
             image = imgproc.loadImage(image_path)
@@ -271,7 +276,7 @@ if __name__ == '__main__':
             # cv2.imwrite(mask_file, score_text)
 
             file_utils.saveResult(image_path, image[:, :, ::-1], polys, dirname='weights/' + repr(epoch) + '/')
-        '''
+
         # test('weights/CRAFT_clr_' + repr(epoch) + '.pth')
         # test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
         # getresult()
