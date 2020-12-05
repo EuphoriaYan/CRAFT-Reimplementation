@@ -417,6 +417,28 @@ def adjustColumeBoxes(boxes: List, row_threshold=0.67, col_threshold=1.35, union
     return final_boxes
 
 
+def projection_split(shape, boxes, type='DBSCAN'):
+    width, height, channel = shape
+    switch = {
+        'DBSCAN': DBSCAN(min_samples=1, eps=15),
+        'MeanShift': MeanShift(bandwidth=0.3),
+        'OPTICS': OPTICS(min_samples=1, eps=20),
+        'Birch': Birch(n_clusters=None)
+    }
+    cluster = switch[type]
+    boxes_data = [(b['r'] + b['l']) / 2 for b in boxes]
+    boxes_data = np.array(boxes_data).reshape((-1, 1))
+    labels = cluster.fit_predict(boxes_data)
+
+    plt.scatter(boxes_data[:, 0], boxes_data[:, 0], s=1, c=labels)
+    plt.show()
+
+    classified_box_ids = collections.defaultdict(list)
+    for idx, label in enumerate(labels):
+        classified_box_ids[label].append(idx)
+    return classified_box_ids
+
+
 def cluster_boxes(boxes, type='DBSCAN'):
     switch = {
         'DBSCAN': DBSCAN(min_samples=1, eps=7),
@@ -452,7 +474,15 @@ def box_sort(box):
     return (u + d) / 2
 
 
-def cluster_sort(boxes):
+def convert_bbox_to_lrud(bbox):
+    l = min(bbox[:, 0])
+    r = max(bbox[:, 0])
+    u = min(bbox[:, 1])
+    d = max(bbox[:, 1])
+    return l, r, u, d
+
+
+def cluster_sort(shape, boxes):
     """
     :param boxes:
     :return: cluster then sorted boxes
@@ -461,7 +491,18 @@ def cluster_sort(boxes):
         u = array[0, 1]
         d = array[2, 1]
     """
-    boxes_lrud = [{'l': b[0, 0], 'r': b[1, 0], 'u': b[0, 1], 'd': b[2, 1], 'id': id} for id, b in enumerate(boxes)]
+    boxes_lrud = []
+    for id, box in enumerate(boxes):
+        l, r, u, d = convert_bbox_to_lrud(box)
+        boxes_lrud.append({'id': id, 'l': l, 'r': r, 'u': u, 'd': d})
+    # boxes_lrud = [{'l': b[0, 0], 'r': b[1, 0], 'u': b[0, 1], 'd': b[2, 1], 'id': id} for id, b in enumerate(boxes)]
+    '''
+    classified_box_ids = projection_split(shape, boxes_lrud)
+    classified_boxes = []
+    for k in classified_box_ids.keys():
+        box_ids = classified_box_ids[k]
+        classified_boxes.append([boxes_lrud[box_id] for box_id in box_ids])
+    '''
     classified_box_ids = cluster_boxes(boxes_lrud)
     classified_boxes = []
     for k in classified_box_ids.keys():

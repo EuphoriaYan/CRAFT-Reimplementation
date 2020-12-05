@@ -108,7 +108,7 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, o
     polys = craft_utils.adjustResultCoordinates(polys, ratio_w, ratio_h)
 
     if ocr_type == 'single_char':
-        boxes = craft_utils.cluster_sort(boxes)
+        boxes = craft_utils.cluster_sort(image.shape, boxes)
 
     for k in range(len(polys)):
         if polys[k] is None:
