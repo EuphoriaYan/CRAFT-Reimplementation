@@ -8,7 +8,7 @@ from eval.script import eval_2015
 from eval.script import eval_2013
 
 
-def eval2013(craft, test_folder, result_folder, text_threshold=0.7, link_threshold=0.4, low_text=0.4):
+def eval2013(net, test_folder, result_folder, text_threshold=0.7, link_threshold=0.4, low_text=0.4):
     image_list, _, _ = file_utils.get_files(test_folder)
     t = time.time()
     res_gt_folder = os.path.join(result_folder, 'gt')
@@ -18,7 +18,7 @@ def eval2013(craft, test_folder, result_folder, text_threshold=0.7, link_thresho
         print("Test image {:d}/{:d}: {:s}".format(k + 1, len(image_list), image_path), end='\n')
         image = imgproc.loadImage(image_path)
 
-        bboxes, polys, score_text = test_net(craft, image, text_threshold, link_threshold, low_text, True, False, 980,
+        bboxes, polys, score_text = test_net(net, image, text_threshold, link_threshold, low_text, True, False, 980,
                                              1.5, False)
 
         # save score text
@@ -32,7 +32,7 @@ def eval2013(craft, test_folder, result_folder, text_threshold=0.7, link_thresho
     print("elapsed time : {}s".format(time.time() - t))
 
 
-def eval2015(craft, test_folder, result_folder, text_threshold=0.7, link_threshold=0.4, low_text=0.4):
+def eval2015(net, test_folder, result_folder, text_threshold=0.7, link_threshold=0.4, low_text=0.4):
     image_list, _, _ = file_utils.get_files(test_folder)
     t = time.time()
     res_gt_folder = os.path.join(result_folder, 'gt')
@@ -42,7 +42,7 @@ def eval2015(craft, test_folder, result_folder, text_threshold=0.7, link_thresho
         print("Test image {:d}/{:d}: {:s}".format(k + 1, len(image_list), image_path), end='\n')
         image = imgproc.loadImage(image_path)
 
-        bboxes, polys, score_text = test_net(craft, image, text_threshold, link_threshold, low_text, True, False, 2240,
+        bboxes, polys, score_text = test_net(net, image, text_threshold, link_threshold, low_text, True, False, 2240,
                                              1.5, False)
 
         # save score text

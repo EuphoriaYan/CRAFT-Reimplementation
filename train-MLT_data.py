@@ -36,7 +36,7 @@ from collections import OrderedDict
 
 from PIL import Image
 from torchvision.transforms import transforms
-from craft import CRAFT
+from detector import Detector
 from torch.autograd import Variable
 from multiprocessing import Pool
 
@@ -48,7 +48,7 @@ random.seed(42)
 #         pass
 #     def __call__(self, gt):
 #         image_name = gt['imnames'][0]
-parser = argparse.ArgumentParser(description='CRAFT reimplementation')
+parser = argparse.ArgumentParser(description='Detector implementation')
 
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from')
@@ -96,15 +96,7 @@ def adjust_learning_rate(optimizer, gamma, step):
 
 if __name__ == '__main__':
 
-    # gaussian = gaussion_transform()
-    # box = scio.loadmat('/data/CRAFT-pytorch/SynthText/gt.mat')
-    # bbox = box['wordBB'][0][0][0]
-    # charbox = box['charBB'][0]
-    # imgname = box['imnames'][0]
-    # imgtxt = box['txt'][0]
-    #
-    # dataloader = syndata(imgname, charbox, imgtxt)
-    dataloader = Synth80k('/data/CRAFT-pytorch/SynthText', target_size=768)
+    dataloader = Synth80k('./data/SynthText', target_size=768)
     train_loader = torch.utils.data.DataLoader(
         dataloader,
         batch_size=2,
@@ -116,22 +108,18 @@ if __name__ == '__main__':
     # prefetcher = data_prefetcher(dataloader)
     # input, target1, target2 = prefetcher.next()
     # print(input.size())
-    net = CRAFT()
-    # net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/CRAFT_net_050000.pth')))
-    net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/1-7.pth')))
-    # net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/craft_mlt_25k.pth')))
-    # net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/synweights/syn_0_20000.pth')))
+    net = Detector()
+    net.load_state_dict(copyStateDict(torch.load('./pretrain/mlt_25k.pth')))
     # realdata = realdata(net)
 
     net = net.cuda()
-    # net = CRAFT_net
 
     # if args.cdua:
     net = torch.nn.DataParallel(net, device_ids=[0, 1, 2, 3]).cuda()
     net.train()
 
     cudnn.benchmark = False
-    realdata = ICDAR2013(net, '/data/CRAFT-pytorch/icdar1317', target_size=768, viz=False)
+    realdata = ICDAR2013(net, './data/icdar1317', target_size=768, viz=False)
     real_data_loader = torch.utils.data.DataLoader(
         realdata,
         batch_size=10,
@@ -204,19 +192,18 @@ if __name__ == '__main__':
             #     print('save the lower loss iter, loss:',loss)
             #     compare_loss = loss
             #     torch.save(net.module.state_dict(),
-            #                '/data/CRAFT-pytorch/real_weights/lower_loss.pth')
+            #                './output/real_weights/lower_loss.pth')
 
             # net.eval()
             if index % 350 == 0 and index != 0:
                 print('Saving state, iter:', index)
-                torch.save(net.module.state_dict(),
-                           '/data/CRAFT-pytorch/weights/mlt' + '_' + repr(epoch) + '_' + repr(index) + '.pth')
-                test('/data/CRAFT-pytorch/weights/mlt' + '_' + repr(epoch) + '_' + repr(index) + '.pth')
-                # test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
+                torch.save(net.module.state_dict(), './output/mlt' + '_' + repr(epoch) + '_' + repr(index) + '.pth')
+                test('./output/mlt' + '_' + repr(epoch) + '_' + repr(index) + '.pth')
+                # test('./output/mlt_25k.pth')
                 getresult()
         print('Saving state, iter:', epoch)
         torch.save(net.module.state_dict(),
-                   '/data/CRAFT-pytorch/epoch_weights/mlt' + '_' + repr(epoch) + '.pth')
-        test('/data/CRAFT-pytorch/epoch_weights/mlt' + '_' + repr(epoch) + '.pth')
-        # test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
+                   './output/epoch_weights/mlt' + '_' + repr(epoch) + '.pth')
+        test('./output/epoch_weights/mlt' + '_' + repr(epoch) + '.pth')
+        # test('./output/mlt_25k.pth')
         getresult()

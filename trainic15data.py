@@ -34,7 +34,7 @@ from eval.script import getresult
 
 from PIL import Image
 from torchvision.transforms import transforms
-from craft import CRAFT
+from detector import Detector
 from torch.autograd import Variable
 from multiprocessing import Pool
 
@@ -46,7 +46,7 @@ random.seed(42)
 #         pass
 #     def __call__(self, gt):
 #         image_name = gt['imnames'][0]
-parser = argparse.ArgumentParser(description='CRAFT reimplementation')
+parser = argparse.ArgumentParser(description='Detector implementation')
 
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from')
@@ -94,7 +94,7 @@ def adjust_learning_rate(optimizer, gamma, step):
 
 if __name__ == '__main__':
 
-    dataloader = Synth80k('/data/CRAFT-pytorch/syntext/SynthText/SynthText', target_size=768)
+    dataloader = Synth80k('./data/syntext/SynthText/SynthText', target_size=768)
     train_loader = torch.utils.data.DataLoader(
         dataloader,
         batch_size=2,
@@ -104,16 +104,16 @@ if __name__ == '__main__':
         pin_memory=True)
     batch_syn = iter(train_loader)
 
-    net = CRAFT()
+    net = Detector()
 
-    net.load_state_dict(copyStateDict(torch.load('/data/CRAFT-pytorch/1-7.pth')))
+    net.load_state_dict(copyStateDict(torch.load('./pretrained/1-7.pth')))
 
     net = net.cuda()
 
     net = torch.nn.DataParallel(net, device_ids=[0, 1, 2, 3]).cuda()
     cudnn.benchmark = True
     net.train()
-    realdata = ICDAR2015(net, '/data/CRAFT-pytorch/icdar2015', target_size=768)
+    realdata = ICDAR2015(net, './data/icdar2015', target_size=768)
     real_data_loader = torch.utils.data.DataLoader(
         realdata,
         batch_size=10,
@@ -183,11 +183,11 @@ if __name__ == '__main__':
             #     print('save the lower loss iter, loss:',loss)
             #     compare_loss = loss
             #     torch.save(net.module.state_dict(),
-            #                '/data/CRAFT-pytorch/real_weights/lower_loss.pth')
+            #                './output/real_weights/lower_loss.pth')
 
         print('Saving state, iter:', epoch)
         torch.save(net.module.state_dict(),
-                   '/data/CRAFT-pytorch/real_weights/CRAFT_clr_' + repr(epoch) + '.pth')
-        test('/data/CRAFT-pytorch/real_weights/CRAFT_clr_' + repr(epoch) + '.pth')
-        # test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
+                   './output/real_weights/clr_' + repr(epoch) + '.pth')
+        test('./output/real_weights/clr_' + repr(epoch) + '.pth')
+        # test('./output/mlt_25k.pth')
         getresult()

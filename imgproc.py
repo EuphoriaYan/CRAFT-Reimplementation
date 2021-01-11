@@ -1,8 +1,3 @@
-"""  
-Copyright (c) 2019-present NAVER Corp.
-MIT License
-"""
-
 # -*- coding: utf-8 -*-
 import os
 import numpy as np

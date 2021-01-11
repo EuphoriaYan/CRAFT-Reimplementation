@@ -1,8 +1,3 @@
-"""  
-Copyright (c) 2019-present NAVER Corp.
-MIT License
-"""
-
 # -*- coding: utf-8 -*-
 import sys
 import os
@@ -19,13 +14,13 @@ from PIL import Image
 import cv2
 from skimage import io
 import numpy as np
-import craft_utils
+import utils
 import imgproc
 import file_utils
 import json
 import zipfile
 
-from craft import CRAFT
+from detector import Detector
 
 from collections import OrderedDict
 
@@ -46,9 +41,9 @@ def str2bool(v):
     return v.lower() in ("yes", "y", "true", "t", "1")
 
 
-parser = argparse.ArgumentParser(description='CRAFT Text Detection')
+parser = argparse.ArgumentParser(description='Test text detector')
 parser.add_argument('--ocr_type', choices=['normal', 'single_char', 'force_column'], default='normal', help='ocr_type')
-parser.add_argument('--trained_model', default='weights/craft_mlt_25k.pth', type=str, help='pretrained model')
+parser.add_argument('--trained_model', default='weights/mlt_25k.pth', type=str, help='pretrained model')
 parser.add_argument('--text_threshold', default=0.7, type=float, help='text confidence threshold')
 parser.add_argument('--low_text', default=0.4, type=float, help='text low-bound score')
 parser.add_argument('--link_threshold', default=0.4, type=float, help='link confidence threshold')
@@ -97,18 +92,18 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, o
     t1 = time.time()
 
     # Post-processing
-    boxes, polys = craft_utils.getDetBoxes(
+    boxes, polys = utils.getDetBoxes(
         score_text, score_link,
         text_threshold, link_threshold,
         low_text, poly, ocr_type
     )
 
     # coordinate adjustment
-    boxes = craft_utils.adjustResultCoordinates(boxes, ratio_w, ratio_h)
-    polys = craft_utils.adjustResultCoordinates(polys, ratio_w, ratio_h)
+    boxes = utils.adjustResultCoordinates(boxes, ratio_w, ratio_h)
+    polys = utils.adjustResultCoordinates(polys, ratio_w, ratio_h)
 
     if ocr_type == 'single_char':
-        boxes = craft_utils.cluster_sort(image.shape, boxes)
+        boxes = utils.cluster_sort(image.shape, boxes)
 
     for k in range(len(polys)):
         if polys[k] is None:
@@ -128,7 +123,7 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, o
 
 def test(modelpara):
     # load net
-    net = CRAFT()  # initialize
+    net = Detector()  # initialize
 
     print('Loading weights from checkpoint {}'.format(modelpara))
     if args.cuda:

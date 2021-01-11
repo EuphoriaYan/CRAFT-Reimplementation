@@ -18,7 +18,7 @@ import h5py
 import re
 from math import exp
 
-import craft_utils
+import utils
 import file_utils
 import imgproc
 
@@ -40,7 +40,7 @@ from eval.script import getresult
 
 from PIL import Image
 from torchvision.transforms import transforms
-from craft import CRAFT
+from detector import Detector
 from torch.autograd import Variable
 from multiprocessing import Pool
 
@@ -52,7 +52,7 @@ random.seed(42)
 #         pass
 #     def __call__(self, gt):
 #         image_name = gt['imnames'][0]
-parser = argparse.ArgumentParser(description='CRAFT reimplementation')
+parser = argparse.ArgumentParser(description='Detector implementation')
 
 ''' -- Train Settings -- '''
 parser.add_argument('--resume', default=None, type=str,
@@ -148,18 +148,18 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, o
     t1 = time.time()
 
     # Post-processing
-    boxes, polys = craft_utils.getDetBoxes(
+    boxes, polys = utils.getDetBoxes(
         score_text, score_link,
         text_threshold, link_threshold,
         low_text, poly, ocr_type
     )
 
     # coordinate adjustment
-    boxes = craft_utils.adjustResultCoordinates(boxes, ratio_w, ratio_h)
-    polys = craft_utils.adjustResultCoordinates(polys, ratio_w, ratio_h)
+    boxes = utils.adjustResultCoordinates(boxes, ratio_w, ratio_h)
+    polys = utils.adjustResultCoordinates(polys, ratio_w, ratio_h)
 
     if ocr_type == 'single_char':
-        boxes = craft_utils.cluster_sort(boxes)
+        boxes = utils.cluster_sort(boxes)
 
     for k in range(len(polys)):
         if polys[k] is None:
@@ -179,10 +179,10 @@ def test_net(net, image, text_threshold, link_threshold, low_text, cuda, poly, o
 
 if __name__ == '__main__':
 
-    net = CRAFT(pretrained=True, freeze=True)
+    net = Detector(pretrained=True, freeze=True)
     print(net, flush=True)
 
-    pretrained_path = 'pretrain/craft_mlt_25k.pth'
+    pretrained_path = 'pretrain/mlt_25k.pth'
     net.load_state_dict(copyStateDict(torch.load(pretrained_path)))
     print('load state dict from ' + pretrained_path, flush=True)
 
@@ -259,10 +259,10 @@ if __name__ == '__main__':
             #     print('save the lower loss iter, loss:',loss)
             #     compare_loss = loss
             #     torch.save(net.module.state_dict(),
-            #                '/data/CRAFT-pytorch/real_weights/lower_loss.pth')
+            #                './output/real_weights/lower_loss.pth')
 
         print('Saving state, iter:', epoch)
-        torch.save(net.module.state_dict(), 'weights/CRAFT_clr_' + repr(epoch) + '.pth')
+        torch.save(net.module.state_dict(), 'weights/clr_' + repr(epoch) + '.pth')
 
         for k, image_path in enumerate(image_list):
             print("Test image {:d}/{:d}: {:s}".format(k + 1, len(image_list), image_path), end='\r')
@@ -277,6 +277,6 @@ if __name__ == '__main__':
 
             file_utils.saveResult(image_path, image[:, :, ::-1], polys, dirname='weights/' + repr(epoch) + '/')
 
-        # test('weights/CRAFT_clr_' + repr(epoch) + '.pth')
-        # test('/data/CRAFT-pytorch/craft_mlt_25k.pth')
+        # test('./output/clr_' + repr(epoch) + '.pth')
+        # test('./output/mlt_25k.pth')
         # getresult()

@@ -13,7 +13,7 @@ from mep import mep
 import random
 from PIL import Image
 import torchvision.transforms as transforms
-import craft_utils
+import utils
 import Polygon as plg
 import time
 
@@ -147,7 +147,7 @@ def random_rotate(imgs):
     return imgs
 
 
-class craft_base_dataset(data.Dataset):
+class base_dataset(data.Dataset):
     def __init__(self, target_size=768, viz=False, debug=False):
         self.target_size = target_size
         self.viz = viz
@@ -282,7 +282,7 @@ class craft_base_dataset(data.Dataset):
 
     def saveInput(self, imagename, image, region_scores, affinity_scores, confidence_mask):
 
-        boxes, polys = craft_utils.getDetBoxes(region_scores / 255, affinity_scores / 255, 0.7, 0.4, 0.4, False)
+        boxes, polys = utils.getDetBoxes(region_scores / 255, affinity_scores / 255, 0.7, 0.4, 0.4, False)
         boxes = np.array(boxes, np.int32) * 2
         if len(boxes) > 0:
             np.clip(boxes[:, :, 0], 0, image.shape[1])
@@ -375,7 +375,7 @@ class craft_base_dataset(data.Dataset):
         return image, region_scores_torch, affinity_scores_torch, confidence_mask_torch, confidences
 
 
-class Synth80k(craft_base_dataset):
+class Synth80k(base_dataset):
 
     def __init__(self, synthtext_folder, target_size=768, viz=False, debug=False):
         super(Synth80k, self).__init__(target_size, viz, debug)
@@ -423,7 +423,7 @@ class Synth80k(craft_base_dataset):
         return image, character_bboxes, words, np.ones((image.shape[0], image.shape[1]), np.float32), confidences
 
 
-class ICDAR2013(craft_base_dataset):
+class ICDAR2013(base_dataset):
     def __init__(self, net, icdar2013_folder, target_size=768, viz=False, debug=False):
         super(ICDAR2013, self).__init__(target_size, viz, debug)
         self.net = net
@@ -530,7 +530,7 @@ class ICDAR2013(craft_base_dataset):
         return bboxes, words
 
 
-class ICDAR2015(craft_base_dataset):
+class ICDAR2015(base_dataset):
     def __init__(self, net, icdar2015_folder, target_size=768, viz=False, debug=False):
         super(ICDAR2015, self).__init__(target_size, viz, debug)
         self.net = net
@@ -623,7 +623,7 @@ class ICDAR2015(craft_base_dataset):
         return bboxes, words
 
 
-class PseudoChinesePage(craft_base_dataset):
+class PseudoChinesePage(base_dataset):
     def __init__(self, net, PseudoChinesePage_folder, target_size=768, viz=False, debug=False):
         super(PseudoChinesePage, self).__init__(target_size, viz, debug)
         self.net = net
@@ -742,16 +742,15 @@ if __name__ == '__main__':
     #     pin_memory=True)
     # train_batch = iter(train_loader)
     # image_origin, target_gaussian_heatmap, target_gaussian_affinity_heatmap, mask = next(train_batch)
-    from craft import CRAFT
+    from detector import Detector
     from torchutil import copyStateDict
 
-    net = CRAFT(freeze=True)
-    net.load_state_dict(
-        copyStateDict(torch.load('/data/CRAFT-pytorch/1-7.pth')))
+    net = Detector(freeze=True)
+    net.load_state_dict(copyStateDict(torch.load('./pretrain/1-7.pth')))
     net = net.cuda()
     net = torch.nn.DataParallel(net)
     net.eval()
-    dataloader = ICDAR2015(net, '/data/CRAFT-pytorch/icdar2015', target_size=768, viz=True)
+    dataloader = ICDAR2015(net, './data/icdar2015', target_size=768, viz=True)
     train_loader = torch.utils.data.DataLoader(
         dataloader,
         batch_size=1,
